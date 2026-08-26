@@ -100,6 +100,57 @@ describe("group-patterns", () => {
         ],
         output: "# folders\nbar/\nbaz/\n\n# files\nfoo\n",
       },
+      {
+        // Regression: on a CRLF file, the missing-heading insertion and the
+        // moved pattern's own line must both keep "\r\n", not "\n".
+        code: "# files\r\nfoo\r\nbar/\r\n",
+        errors: [
+          { messageId: "missingHeading", data: { heading: "# folders" } },
+          {
+            messageId: "wrongGroup",
+            data: { pattern: "bar/", group: "folders" },
+          },
+        ],
+        output: "# files\r\nfoo\r\n\r\n# folders\r\nbar/\r\n",
+      },
+      {
+        // Regression: a glued cluster (anchor + negation) moved as one unit
+        // on a CRLF file must join its members with "\r\n".
+        code: "# folders\r\nbaz/\r\nfoo\r\n!foo/x\r\n# files\r\n",
+        errors: [
+          { messageId: "wrongGroup", data: { pattern: "foo", group: "files" } },
+        ],
+        output: "# folders\r\nbaz/\r\n# files\r\nfoo\r\n!foo/x\r\n",
+      },
+      {
+        // Regression: the trailing-separator-blank-skip fix (see the
+        // preceding regression case) must also preserve CRLF -- the moved
+        // pattern lands right after "bar/", keeping "\r\n" throughout.
+        code: "# folders\r\nbar/\r\n\r\n# files\r\nfoo\r\nbaz/\r\n",
+        errors: [
+          {
+            messageId: "wrongGroup",
+            data: { pattern: "baz/", group: "folders" },
+          },
+        ],
+        output: "# folders\r\nbar/\r\nbaz/\r\n\r\n# files\r\nfoo\r\n",
+      },
+      {
+        // Mixed-EOL file: the earlier lines are LF, but the insertion point
+        // (right before "bar/", the first folders-type pattern) sits next
+        // to a CRLF line. The inserted heading (and its leading blank) must
+        // follow that adjacent line's terminator, not the file's LF-using
+        // first lines.
+        code: "# files\nfoo\nbar/\r\n",
+        errors: [
+          { messageId: "missingHeading", data: { heading: "# folders" } },
+          {
+            messageId: "wrongGroup",
+            data: { pattern: "bar/", group: "folders" },
+          },
+        ],
+        output: "# files\nfoo\n\r\n# folders\r\nbar/\r\n",
+      },
     ],
   });
 });

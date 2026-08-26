@@ -97,6 +97,33 @@ describe("sort-patterns", () => {
         ],
         output: "apple\nbanana\n# comment\ncherry\ndate\n",
       },
+      {
+        // Regression: a reordered run on a CRLF file must keep "\r\n"
+        // between its lines, not silently rewrite them to "\n".
+        code: "banana\r\napple\r\n",
+        errors: [
+          {
+            messageId: "unsorted",
+            data: { current: "apple", previous: "banana" },
+          },
+        ],
+        output: "apple\r\nbanana\r\n",
+      },
+      {
+        // Mixed-EOL file: an earlier, unrelated block is LF (and is the
+        // file's first terminator), but the unsorted block being fixed --
+        // a separate block, split off by the comment -- is CRLF. The fix
+        // must follow that block's own local terminator, not the file's
+        // LF-using first line.
+        code: "keep\n# comment\nbanana\r\napple\r\n",
+        errors: [
+          {
+            messageId: "unsorted",
+            data: { current: "apple", previous: "banana" },
+          },
+        ],
+        output: "keep\n# comment\napple\r\nbanana\r\n",
+      },
     ],
   });
 });
