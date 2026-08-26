@@ -1,4 +1,4 @@
-import type { GitignoreNode, Pattern } from "../parser/index.js";
+import type { BlankLine, GitignoreNode, Pattern } from "../parser/index.js";
 
 export type GroupName = "folders" | "files";
 
@@ -17,16 +17,34 @@ export interface MoveEdit {
   insertBeforeIndex: number;
 }
 
-/** Insert a new heading comment line directly above `beforeIndex` (which
- * may equal body.length for EOF), optionally preceded by a blank line. */
-export interface InsertHeadingEdit {
-  kind: "insertHeading";
+/**
+ * Builds an entire group section from scratch: removes every given cluster
+ * from wherever it currently sits in the body, and re-lists all of them
+ * (each cluster's members kept together and in their original relative
+ * order, clusters themselves also in original relative order) directly
+ * beneath a freshly-inserted `heading`, positioned just before
+ * `insertBeforeIndex` (which may equal `body.length` for EOF).
+ *
+ * Used when a group's heading is missing entirely: rather than inserting a
+ * bare heading and leaving each misplaced pattern to be moved individually
+ * (which can't express "arrange this whole section relative to `order`"),
+ * the whole section is built as one atomic edit.
+ */
+export interface ArrangeEdit {
+  kind: "arrange";
   heading: string;
-  beforeIndex: number;
+  clusters: Pattern[][];
+  insertBeforeIndex: number;
   blankLineBefore: boolean;
+  blankLineAfter: boolean;
+  /** Blank lines that must be removed alongside the clusters: ones that sit
+   * between `insertBeforeIndex` and EOF with nothing real left after them
+   * once this group's own clusters are gone, so keeping them would leave a
+   * meaningless trailing blank rather than a real section separator. */
+  staleBlankLines: BlankLine[];
 }
 
-export type GroupEdit = MoveEdit | InsertHeadingEdit;
+export type GroupEdit = MoveEdit | ArrangeEdit;
 
 export interface GroupViolation {
   kind: "wrongGroup" | "missingHeading";
@@ -213,16 +231,59 @@ function skipTrailingBlankLines(
 }
 
 /**
+ * Collects every organizable cluster (a non-negated pattern of `group`,
+ * together with any negations glued to it) in original body order. A
+ * pattern with no glued negations is its own one-member cluster.
+ */
+function collectGroupClusters(
+  patterns: readonly IndexedNode<Pattern>[],
+  group: GroupName,
+  clusterByAnchorIndex: ReadonlyMap<number, Cluster>,
+): IndexedNode<Pattern>[][] {
+  const clusters: IndexedNode<Pattern>[][] = [];
+  for (const entry of patterns) {
+    if (entry.node.negated) {
+      continue; // glued negations ride along with their anchor below;
+      // unglued ones are never part of any cluster and are simply skipped
+      // here -- they're reported (unfixed) by the wrongGroup pass instead.
+    }
+    if (groupOf(entry.node) !== group) {
+      continue;
+    }
+    const cluster = clusterByAnchorIndex.get(entry.bodyIndex);
+    clusters.push(cluster ? cluster.members : [entry]);
+  }
+  return clusters;
+}
+
+/**
+ * Given a set of body indices about to be removed (because they're part of
+ * the section being arranged), finds the nearest remaining node before
+ * `from`, skipping over anything that's being removed. Returns `-1` if
+ * nothing remains (start of file).
+ */
+function prevRemainingIndex(
+  body: readonly GitignoreNode[],
+  from: number,
+  removed: ReadonlySet<number>,
+): number {
+  let i = from;
+  while (i >= 0 && removed.has(i)) {
+    i -= 1;
+  }
+  return i;
+}
+
+/**
  * Computes group-organization violations for a gitignore file's body.
  *
  * See the module-level design notes in the rule that consumes this
  * (group-patterns) for the reasoning behind two deliberate scope
  * decisions: both `wrongGroup` and `missingHeading` checks only fire when
  * patterns of BOTH groups exist in the file (a file with only one kind of
- * pattern has nothing to organize into two groups), and a target section
- * whose heading doesn't exist yet falls back to "end of file" as the move
- * destination (the companion `missingHeading` violation is what actually
- * introduces the heading).
+ * pattern has nothing to organize into two groups), and `order` only
+ * governs the arrangement produced when a heading is actually being
+ * inserted -- it never rearranges a group whose heading already exists.
  */
 export function computeGroupViolations(
   body: readonly GitignoreNode[],
@@ -240,92 +301,195 @@ export function computeGroupViolations(
 
   const violations: GroupViolation[] = [];
 
-  // missingHeading: independent of whether both groups exist in terms of
-  // *what* triggers it (a group with patterns and no heading), but the
-  // whole feature is scoped to files actually using both groups.
-  if (hasFolders && hasFiles) {
-    const sections = computeSections(body, options);
-    const missingHeadingGroups: GroupName[] = [];
-    if (!sections.some((s) => s.group === "folders")) {
-      missingHeadingGroups.push("folders");
-    }
-    if (!sections.some((s) => s.group === "files")) {
-      missingHeadingGroups.push("files");
-    }
-    // "order" only decides the sequence in which BOTH newly-needed
-    // headings are reported/inserted.
-    const orderedMissing = options.order.filter((g) =>
-      missingHeadingGroups.includes(g),
+  if (!(hasFolders && hasFiles)) {
+    return violations;
+  }
+
+  const sections = computeSections(body, options);
+  const missingHeadingGroups: GroupName[] = [];
+  if (!sections.some((s) => s.group === "folders")) {
+    missingHeadingGroups.push("folders");
+  }
+  if (!sections.some((s) => s.group === "files")) {
+    missingHeadingGroups.push("files");
+  }
+  const orderedMissing = options.order.filter((g) =>
+    missingHeadingGroups.includes(g),
+  );
+
+  const { clusterByAnchorIndex, unglued } = computeClusters(patterns);
+  const ungluedIndices = new Set(unglued.map((u) => u.bodyIndex));
+
+  for (const group of orderedMissing) {
+    const clusters = collectGroupClusters(
+      patterns,
+      group,
+      clusterByAnchorIndex,
+    );
+    // orderedMissing is derived from missingHeadingGroups, which is only
+    // ever populated for a group that actually has patterns (hasFolders
+    // and hasFiles are both true here), so this is never empty.
+    const anchorNode = clusters[0]![0]!.node;
+
+    const removedIndices = new Set(
+      clusters.flat().map((member) => member.bodyIndex),
     );
 
-    for (const group of orderedMissing) {
-      // hasFolders && hasFiles (checked above) guarantees a pattern of
-      // every group exists, so this is never undefined here.
-      const first = patterns.find((p) => groupOf(p.node) === group)!;
-      const isFileStart = first.bodyIndex === 0;
-      const previous = body[first.bodyIndex - 1];
-      const alreadyBlankPreceded = previous?.type === "BlankLine";
-      violations.push({
-        kind: "missingHeading",
-        node: first.node,
-        targetGroup: group,
-        fix: {
-          kind: "insertHeading",
-          heading:
-            group === "folders" ? options.folderHeading : options.fileHeading,
-          beforeIndex: first.bodyIndex,
-          blankLineBefore: !isFileStart && !alreadyBlankPreceded,
-        },
-      });
+    const otherGroup: GroupName = group === "folders" ? "files" : "folders";
+    const otherSection = firstSectionOf(sections, otherGroup);
+
+    let insertBeforeIndex: number;
+    if (otherSection) {
+      // The other group already has a section: `order` places this new
+      // one immediately before or after it, without disturbing it. When
+      // inserting after, the other section's trailing content may include
+      // blank lines *and* patterns that this very fix is about to remove
+      // (this group's own cluster(s), sitting misplaced inside or right
+      // after the other section) -- both are skipped when finding where
+      // "after the other section" really lands post-fix.
+      insertBeforeIndex =
+        options.order.indexOf(group) < options.order.indexOf(otherGroup)
+          ? otherSection.headingIndex
+          : (() => {
+              let index = otherSection.endIndex;
+              while (
+                index - 1 > otherSection.headingIndex &&
+                (body[index - 1]?.type === "BlankLine" ||
+                  removedIndices.has(index - 1))
+              ) {
+                index -= 1;
+              }
+              return index;
+            })();
+    } else {
+      // Neither section exists yet (both groups are missing their
+      // heading): anchor the first one built at the first organizable
+      // pattern in the file. Once this fix applies, a second pass finds
+      // the other group's section already in place and takes the branch
+      // above.
+      insertBeforeIndex = patterns[0]!.bodyIndex;
     }
 
-    // wrongGroup: only independently-checked patterns are considered --
-    // non-negated patterns, plus negations that found no gluing anchor.
-    // Glued negations move silently with their anchor and are never
-    // independently reported.
-    const { clusterByAnchorIndex, unglued } = computeClusters(patterns);
-    const ungluedIndices = new Set(unglued.map((u) => u.bodyIndex));
+    const prevIdx = prevRemainingIndex(
+      body,
+      insertBeforeIndex - 1,
+      removedIndices,
+    );
+    const blankLineBefore = prevIdx >= 0 && body[prevIdx]!.type !== "BlankLine";
 
-    for (const entry of patterns) {
-      if (entry.node.negated && !ungluedIndices.has(entry.bodyIndex)) {
-        continue; // glued: silent, moves with its anchor
-      }
-
-      const targetGroup = groupOf(entry.node);
-      const inCorrectSection = Boolean(
-        sectionContaining(sections, entry.bodyIndex, targetGroup),
-      );
-      if (inCorrectSection) {
-        continue;
-      }
-
-      if (entry.node.negated) {
-        // Unglued negation: report, but never fix -- there's no anchor to
-        // safely move it with.
-        violations.push({ kind: "wrongGroup", node: entry.node, targetGroup });
-        continue;
-      }
-
-      const targetSection = firstSectionOf(sections, targetGroup);
-      const insertBeforeIndex = targetSection
-        ? skipTrailingBlankLines(
-            body,
-            targetSection.endIndex,
-            targetSection.headingIndex,
-          )
-        : skipTrailingBlankLines(body, body.length, -1);
-      const cluster = clusterByAnchorIndex.get(entry.bodyIndex);
-      const clusterNodes = cluster
-        ? cluster.members.map((m) => m.node)
-        : [entry.node];
-
-      violations.push({
-        kind: "wrongGroup",
-        node: entry.node,
-        targetGroup,
-        fix: { kind: "move", cluster: clusterNodes, insertBeforeIndex },
-      });
+    // blankLineAfter: look past both this group's own removed nodes *and*
+    // any blank lines to see whether real content remains between the
+    // insertion point and EOF. A separator is only manufactured when real
+    // content follows with no blank already there; if a blank already
+    // separates the insertion point from what follows, or nothing real
+    // follows at all, no new separator is needed.
+    let lookahead = insertBeforeIndex;
+    while (
+      lookahead < body.length &&
+      (removedIndices.has(lookahead) || body[lookahead]!.type === "BlankLine")
+    ) {
+      lookahead += 1;
     }
+    const blankLineAfter = lookahead < body.length;
+
+    // staleBlankLines: independent of where the new section is being
+    // inserted, a cluster can be removed from *anywhere* it currently sits
+    // in the body -- including from a trailing run at the very end of the
+    // file. Walking backward from EOF over a contiguous run of only removed
+    // nodes and/or blank lines finds every blank line that is about to lose
+    // the real content it used to separate from EOF, leaving it an orphaned,
+    // meaningless line rather than a genuine section boundary; those must be
+    // removed alongside the clusters rather than left dangling.
+    const staleBlankLines: BlankLine[] = [];
+    let tail = body.length - 1;
+    while (tail >= 0) {
+      const node = body[tail]!;
+      if (removedIndices.has(tail)) {
+        tail -= 1;
+        continue;
+      }
+      if (node.type === "BlankLine") {
+        staleBlankLines.push(node);
+        tail -= 1;
+        continue;
+      }
+      break;
+    }
+    staleBlankLines.reverse(); // walked backward -- restore body order
+
+    violations.push({
+      kind: "missingHeading",
+      node: anchorNode,
+      targetGroup: group,
+      fix: {
+        kind: "arrange",
+        heading:
+          group === "folders" ? options.folderHeading : options.fileHeading,
+        clusters: clusters.map((cluster) => cluster.map((m) => m.node)),
+        insertBeforeIndex,
+        blankLineBefore,
+        blankLineAfter,
+        staleBlankLines,
+      },
+    });
+  }
+
+  // wrongGroup: only independently-checked patterns are considered --
+  // non-negated patterns, plus negations that found no gluing anchor.
+  // Glued negations move silently with their anchor and are never
+  // independently reported. Patterns belonging to a group whose heading is
+  // missing are handled entirely by that group's `arrange` fix above (an
+  // unglued negation still gets its own unfixed report, same as always --
+  // it's never part of any cluster, arranged or otherwise).
+  for (const entry of patterns) {
+    if (entry.node.negated && !ungluedIndices.has(entry.bodyIndex)) {
+      continue; // glued: silent, moves with its anchor
+    }
+
+    const targetGroup = groupOf(entry.node);
+
+    if (
+      missingHeadingGroups.includes(targetGroup) &&
+      !ungluedIndices.has(entry.bodyIndex)
+    ) {
+      continue; // handled by that group's arrange fix
+    }
+
+    const inCorrectSection = Boolean(
+      sectionContaining(sections, entry.bodyIndex, targetGroup),
+    );
+    if (inCorrectSection) {
+      continue;
+    }
+
+    if (entry.node.negated) {
+      // Unglued negation: report, but never fix -- there's no anchor to
+      // safely move it with.
+      violations.push({ kind: "wrongGroup", node: entry.node, targetGroup });
+      continue;
+    }
+
+    // Reaching here means targetGroup is NOT in missingHeadingGroups (that
+    // case continues above), so its section is guaranteed to exist -- a
+    // fallback for a missing section is no longer reachable now that a
+    // missing heading is always handled by that group's own arrange fix.
+    const targetSection = firstSectionOf(sections, targetGroup)!;
+    const insertBeforeIndex = skipTrailingBlankLines(
+      body,
+      targetSection.endIndex,
+      targetSection.headingIndex,
+    );
+    const cluster = clusterByAnchorIndex.get(entry.bodyIndex);
+    const clusterNodes = cluster
+      ? cluster.members.map((m) => m.node)
+      : [entry.node];
+
+    violations.push({
+      kind: "wrongGroup",
+      node: entry.node,
+      targetGroup,
+      fix: { kind: "move", cluster: clusterNodes, insertBeforeIndex },
+    });
   }
 
   return violations;
