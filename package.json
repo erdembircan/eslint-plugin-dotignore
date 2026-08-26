@@ -41,8 +41,8 @@
   },
   "scripts": {
     "build": "tsdown",
-    "lint": "pnpm build && eslint .",
-    "lint:fix": "pnpm build && eslint . --fix",
+    "lint": "pnpm build && eslint . --flag unstable_native_nodejs_ts_config",
+    "lint:fix": "pnpm build && eslint . --fix --flag unstable_native_nodejs_ts_config",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

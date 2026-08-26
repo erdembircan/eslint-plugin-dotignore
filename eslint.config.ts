@@ -9,6 +9,13 @@ import nodePlugin from "eslint-plugin-n";
 // config can be loaded at all; the `lint` script guarantees that ordering
 // (see package.json), and it's a deliberate build-before-lint tradeoff
 // rather than an oversight -- no jiti/ts-node loader here to paper over it.
+//
+// (Unrelated: this file itself is loaded natively via Node's own type
+// stripping, not jiti/ts-node -- ESLint 10 otherwise routes any `.ts` flat
+// config through jiti by default, so `lint`/`lint:fix` pass
+// `--flag unstable_native_nodejs_ts_config` to opt into the native path
+// instead. If a future ESLint release renames or graduates that flag,
+// update those two scripts in package.json.)
 import dotignore from "./dist/index.js";
 
 export default tseslint.config(
@@ -16,7 +23,12 @@ export default tseslint.config(
     ignores: ["dist", "coverage", "node_modules"],
   },
   {
-    files: ["src/**/*.ts", "test/**/*.ts", "*.config.ts", "*.config.js"],
+    files: [
+      "src/**/*.ts",
+      "test/**/*.ts",
+      "*.config.ts",
+      ".eslint-doc-generatorrc.ts",
+    ],
     extends: [
       js.configs.recommended,
       ...tseslint.configs.recommendedTypeChecked,
@@ -24,7 +36,7 @@ export default tseslint.config(
     languageOptions: {
       parserOptions: {
         projectService: {
-          allowDefaultProject: ["*.config.ts", "*.config.js"],
+          allowDefaultProject: ["*.config.ts", ".eslint-doc-generatorrc.ts"],
         },
         tsconfigRootDir: import.meta.dirname,
       },
@@ -67,7 +79,12 @@ export default tseslint.config(
     // error, not just a missed check. Scoped here to the same JS/TS files
     // as the rest of this config instead.
     ...prettierRecommended,
-    files: ["src/**/*.ts", "test/**/*.ts", "*.config.ts", "*.config.js"],
+    files: [
+      "src/**/*.ts",
+      "test/**/*.ts",
+      "*.config.ts",
+      ".eslint-doc-generatorrc.ts",
+    ],
   },
   dotignore.configs.strict,
 );
