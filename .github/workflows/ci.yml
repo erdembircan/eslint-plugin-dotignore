@@ -27,7 +27,19 @@ jobs:
       - run: pnpm lint
       - run: pnpm format
       - run: pnpm typecheck
-      - run: pnpm build
+      # tsdown 0.22.x (our pinned build tool) declares
+      # `engines.node: "^22.18.0 || >=24.11.0"` -- it needs a modern Node to
+      # run itself (it uses `Promise.withResolvers`, unavailable before
+      # Node 22), regardless of the `--target` it builds *for*. That's a
+      # build-toolchain constraint, not a constraint on the published
+      # output: nothing we ship uses `Promise.withResolvers`, and the
+      # package's own `engines.node: ">=20"` describes consumers of the
+      # built dist, not people running `tsdown` locally. So the build step
+      # only runs on Node versions tsdown itself supports; lint, format,
+      # typecheck, and the full coverage-gated test suite still run
+      # unconditionally on every matrix leg, including Node 20.
+      - if: matrix.node-version != 20
+        run: pnpm build
       - run: pnpm test:coverage
 
   license:
