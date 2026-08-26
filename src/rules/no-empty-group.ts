@@ -60,7 +60,23 @@ const rule: GitignoreRuleDefinition<[], MessageIds> = {
             // blockStart === i, already checked in-bounds above.
             const firstComment = body[blockStart]!;
             const lastRemovedIndex = scan - 1;
-            const deleteStart = firstComment.range[0];
+            let deleteStart = firstComment.range[0];
+
+            // When nothing at all follows the removed block (the scan ran
+            // off the end of the body rather than stopping at the next
+            // comment), any blank line(s) immediately preceding it were
+            // only ever separating it from what came after -- now that
+            // there's nothing left after, they'd become a dangling blank
+            // trailing the file. Absorb them into the same removal instead
+            // of leaving them behind.
+            if (scan === body.length) {
+              let precedingIndex = blockStart - 1;
+              while (body[precedingIndex]?.type === "BlankLine") {
+                deleteStart = body[precedingIndex]!.range[0];
+                precedingIndex -= 1;
+              }
+            }
+
             const deleteEnd = endOfLineIncludingTerminator(
               body,
               lastRemovedIndex,

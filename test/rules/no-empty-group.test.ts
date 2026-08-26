@@ -57,6 +57,24 @@ describe("no-empty-group", () => {
         errors: [{ messageId: "emptyGroup" }, { messageId: "emptyGroup" }],
         output: "# second\n",
       },
+      {
+        // Regression: a blank line precedes the empty heading and nothing
+        // at all follows it (removal reaches EOF). That blank was only
+        // ever separating the heading from real content before it -- with
+        // the heading and everything after it gone, leaving the blank
+        // behind would dangle a trailing blank line at EOF. It must be
+        // consumed by the same fix.
+        code: "foo\n\n# empty\n",
+        errors: [{ messageId: "emptyGroup" }],
+        output: "foo\n",
+      },
+      {
+        // Same as above, but with a run of two preceding blank lines --
+        // both must be consumed, not just the immediately adjacent one.
+        code: "foo\n\n\n# empty\n",
+        errors: [{ messageId: "emptyGroup" }],
+        output: "foo\n",
+      },
     ],
   });
 });
