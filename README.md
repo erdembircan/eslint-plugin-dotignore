@@ -91,6 +91,14 @@ const ast = parse("node_modules/\n!keep.txt\n");
 
 Text in, AST out — every line classified as `Pattern`, `Comment`, or `BlankLine`, with exact ranges and locations. Useful for codemods, editor tooling, or anything else that needs to understand a `.gitignore` without string surgery.
 
+## Development
+
+```sh
+pnpm install
+pnpm build   # required once before linting — the repo lints its own .gitignore with the built plugin
+pnpm test
+```
+
 ## License
 
 [MIT](LICENSE) © Erdem Bircan
