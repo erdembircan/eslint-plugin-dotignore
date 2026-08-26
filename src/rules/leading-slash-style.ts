@@ -10,7 +10,14 @@ const rule: GitignoreRuleDefinition<Options, MessageIds> = {
   meta: {
     type: "layout",
     fixable: "code",
-    schema: [{ type: "string", enum: ["minimal", "explicit"] }],
+    schema: [
+      {
+        type: "string",
+        enum: ["minimal", "explicit"],
+        description:
+          'Whether a redundant leading \'/\' should be omitted ("minimal") or required ("explicit") on patterns anchored by a middle slash.',
+      },
+    ],
     defaultOptions: ["minimal"],
     docs: {
       description:

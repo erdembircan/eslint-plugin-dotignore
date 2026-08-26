@@ -19,14 +19,22 @@ const rule: GitignoreRuleDefinition<Options, MessageIds> = {
       {
         type: "object",
         properties: {
-          folderHeading: { type: "string" },
-          fileHeading: { type: "string" },
+          folderHeading: {
+            type: "string",
+            description: "The heading comment for directory-only patterns.",
+          },
+          fileHeading: {
+            type: "string",
+            description: "The heading comment for all other patterns.",
+          },
           order: {
             type: "array",
             items: { type: "string", enum: ["folders", "files"] },
             minItems: 2,
             maxItems: 2,
             uniqueItems: true,
+            description:
+              "The order in which newly-needed headings are inserted, when both are missing.",
           },
         },
         additionalProperties: false,

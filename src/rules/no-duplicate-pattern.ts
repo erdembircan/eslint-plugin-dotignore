@@ -44,7 +44,11 @@ const rule: GitignoreRuleDefinition<Options, MessageIds> = {
       {
         type: "object",
         properties: {
-          includeEquivalents: { type: "boolean" },
+          includeEquivalents: {
+            type: "boolean",
+            description:
+              "Whether spec-equivalent spellings of the same pattern (not just exact duplicates) should also be flagged.",
+          },
         },
         additionalProperties: false,
       },

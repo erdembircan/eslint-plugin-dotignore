@@ -18,9 +18,21 @@ const rule: GitignoreRuleDefinition<[SortOptions], MessageIds> = {
       {
         type: "object",
         properties: {
-          direction: { type: "string", enum: ["asc", "desc"] },
-          caseSensitive: { type: "boolean" },
-          natural: { type: "boolean" },
+          direction: {
+            type: "string",
+            enum: ["asc", "desc"],
+            description:
+              "The sort direction for each run of ordinary patterns.",
+          },
+          caseSensitive: {
+            type: "boolean",
+            description: "Whether comparison is case-sensitive.",
+          },
+          natural: {
+            type: "boolean",
+            description:
+              "Whether embedded numbers are compared by numeric value rather than character-by-character.",
+          },
         },
         additionalProperties: false,
       },

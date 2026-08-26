@@ -21,7 +21,14 @@ const rule: GitignoreRuleDefinition<Options, MessageIds> = {
   meta: {
     type: "layout",
     fixable: "whitespace",
-    schema: [{ type: "string", enum: ["always", "never"] }],
+    schema: [
+      {
+        type: "string",
+        enum: ["always", "never"],
+        description:
+          'Whether a comment must ("always") or must not ("never") have a space after \'#\'.',
+      },
+    ],
     defaultOptions: ["always"],
     docs: {
       description: "enforce consistent spacing after '#' in comments",

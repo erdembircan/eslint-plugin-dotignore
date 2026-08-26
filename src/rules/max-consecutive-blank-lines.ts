@@ -16,7 +16,12 @@ const rule: GitignoreRuleDefinition<Options, MessageIds> = {
       {
         type: "object",
         properties: {
-          max: { type: "integer", minimum: 0 },
+          max: {
+            type: "integer",
+            minimum: 0,
+            description:
+              "The maximum number of consecutive blank lines allowed.",
+          },
         },
         additionalProperties: false,
       },
