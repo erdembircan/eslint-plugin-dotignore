@@ -1,14 +1,11 @@
 import { TextSourceCodeBase, VisitNodeStep } from "@eslint/plugin-kit";
 import type { TraversalStep } from "@eslint/plugin-kit";
-import type {
-  BlankLine,
-  Comment,
-  GitignoreFile,
-  Pattern,
-} from "../parser/index.js";
+import type { GitignoreFile, GitignoreNode } from "../parser/index.js";
 
-/** Any node that can appear in a gitignore AST, including the root. */
-export type GitignoreNode = GitignoreFile | Pattern | Comment | BlankLine;
+// Re-exported for compatibility: `GitignoreNode` is defined in the parser
+// domain (it's just the union of the parser's own node types), but this
+// module has historically been where consumers import it from.
+export type { GitignoreNode };
 
 /**
  * The `SourceCode` object ESLint uses to work with a parsed gitignore file.

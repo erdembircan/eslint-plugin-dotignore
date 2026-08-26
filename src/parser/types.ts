@@ -67,3 +67,6 @@ export interface BlankLine extends BaseNode {
   /** The whitespace content of the line; may be the empty string. */
   raw: string;
 }
+
+/** Any node that can appear in a gitignore AST, including the root. */
+export type GitignoreNode = GitignoreFile | Pattern | Comment | BlankLine;

@@ -1,5 +1,4 @@
-import type { GitignoreNode } from "../language/source-code.js";
-import type { Pattern } from "../parser/index.js";
+import type { GitignoreNode, Pattern } from "../parser/index.js";
 
 export type GroupName = "folders" | "files";
 
