@@ -1,5 +1,9 @@
 # eslint-plugin-dotignore
 
+[![CI](https://github.com/erdembircan/eslint-plugin-dotignore/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/erdembircan/eslint-plugin-dotignore/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/eslint-plugin-dotignore.svg)](https://www.npmjs.com/package/eslint-plugin-dotignore)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 Lint, sort, group, and fix `.gitignore` files with ESLint.
 
 Git never complains about a `.gitignore` — it silently ignores what it can't parse, silently skips negations that can never apply, and happily tolerates duplicates, dead patterns, and trailing whitespace that changes nothing. This plugin makes all of that visible, and fixes most of it automatically.
@@ -15,7 +19,14 @@ Git never complains about a `.gitignore` — it silently ignores what it can't p
 ## Installation
 
 ```sh
+# pnpm
 pnpm add -D eslint eslint-plugin-dotignore
+
+# npm
+npm install --save-dev eslint eslint-plugin-dotignore
+
+# yarn
+yarn add --dev eslint eslint-plugin-dotignore
 ```
 
 Requires ESLint ≥ 9.7.0 (flat config) and Node ≥ 22.18.
@@ -94,14 +105,6 @@ const ast = parse("node_modules/\n!keep.txt\n");
 ```
 
 Text in, AST out — every line classified as `Pattern`, `Comment`, or `BlankLine`, with exact ranges and locations. Useful for codemods, editor tooling, or anything else that needs to understand a `.gitignore` without string surgery.
-
-## Development
-
-```sh
-pnpm install
-pnpm build   # required once before linting — the repo lints its own .gitignore with the built plugin
-pnpm test
-```
 
 ## License
 
