@@ -28,6 +28,7 @@
   "files": [
     "dist"
   ],
+  "main": "./dist/index.js",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -47,6 +48,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
+    "docs": "pnpm build && eslint-doc-generator",
+    "docs:check": "pnpm build && eslint-doc-generator --check",
     "prepublishOnly": "pnpm build && pnpm test"
   },
   "peerDependencies": {

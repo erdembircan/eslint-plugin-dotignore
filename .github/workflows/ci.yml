@@ -45,3 +45,24 @@ jobs:
 
       - name: Check the license is in sync
         run: npx license-wizard --verify --strict
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.16.1
+
+      # Docs generation is a single global check, not something that
+      # varies per Node version, so it gets its own job rather than
+      # running once per matrix leg.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - name: Check generated docs are in sync
+        run: pnpm docs:check
