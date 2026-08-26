@@ -77,7 +77,7 @@ export default [
 ## Presets
 
 - `configs.recommended` — spec violations and dead patterns as errors, whitespace and style hygiene as warnings. Reordering rules (`sort-patterns`, `group-patterns`) and the filesystem-aware `require-dir-slash` stay off — enable them deliberately.
-- `configs.all` — every rule as an error.
+- `configs.strict` — every rule as an error.
 
 ## The parser, standalone
 

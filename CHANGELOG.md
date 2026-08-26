@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Style rules: `no-trailing-whitespace`, `comment-spacing`, `max-consecutive-blank-lines`, `no-empty-group`, `leading-slash-style`.
 - Reordering rules: `sort-patterns` and `group-patterns`, both negation-safe — reordering never changes what Git ignores.
 - Filesystem-aware `require-dir-slash` rule with an injectable filesystem boundary.
-- Shareable configs: `recommended` and `all`.
+- Shareable configs: `recommended` and `strict`.
 - Per-rule documentation pages and an auto-generated README rules table.
 
 [Unreleased]: https://github.com/erdembircan/eslint-plugin-dotignore/compare/v1.0.0...HEAD
