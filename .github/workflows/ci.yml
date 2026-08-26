@@ -37,8 +37,8 @@ jobs:
 
       # license-wizard requires Node.js >= 22.13.0; kept as its own job
       # (rather than gated inside the test matrix) since it's a single
-      # global check, not something that varies per Node version, and the
-      # matrix's node 20 leg doesn't meet the requirement.
+      # global check, not something that varies per Node version. Runs on
+      # Node 24 independent of the test matrix's own Node versions.
       - uses: actions/setup-node@v4
         with:
           node-version: 24
