@@ -16,20 +16,13 @@ describe("group-patterns", () => {
     invalid: [
       {
         // Only the "folders" heading is missing; "foo" is already
-        // correctly placed inside the existing "files" section, but
-        // "bar/" (folders-type) has nowhere correct to live yet. Both
-        // fixes touch the same region (inserting the heading right where
-        // "bar/" already sits, and moving "bar/" from there to EOF, a
-        // no-op since it's already last) -- only the heading-insert
-        // fix survives this single pass; a second --fix pass converges
-        // the rest.
+        // correctly placed inside the existing "files" section. "bar/"
+        // (folders-type) no longer gets its own independent wrongGroup
+        // report -- it's entirely swept up into the missing section's
+        // single atomic arrange fix, which converges fully in one pass.
         code: "# files\nfoo\nbar/\n",
         errors: [
           { messageId: "missingHeading", data: { heading: "# folders" } },
-          {
-            messageId: "wrongGroup",
-            data: { pattern: "bar/", group: "folders" },
-          },
         ],
         output: "# files\nfoo\n\n# folders\nbar/\n",
       },
@@ -58,23 +51,26 @@ describe("group-patterns", () => {
         output: "# folders\nbaz/\n# files\nfoo\n!foo/x\n",
       },
       {
-        // No trailing newline on the last line, and no organizational
-        // structure at all (so both missingHeading and wrongGroup fire for
-        // both patterns, same as the plain "foo\nbar/\n" case). What this
-        // case specifically exercises: moving "bar/" to the EOF fallback
-        // destination must prepend its own newline rather than gluing
-        // onto the previous line, since the file doesn't already end in one.
+        // No trailing newline on the last line, and neither heading exists
+        // (so both groups report missingHeading only -- no independent
+        // wrongGroup for either pattern anymore). Both arrange fixes anchor
+        // at the same insertion point (the very first pattern) and so
+        // conflict with each other; the smaller of the two edits ("files",
+        // whose own cluster is just "foo") wins this single pass -- `order`
+        // only takes visible effect once one section already exists (see
+        // the "arranges the missing section" cases below); it doesn't
+        // decide which of two equally-anchored, from-scratch sections wins
+        // a same-pass conflict. A second --fix pass picks up "bar/" from
+        // where this pass left it (still without a trailing newline) and
+        // converges the rest, at which point building its own fresh
+        // section unconditionally terminates the last line -- the same
+        // established behavior as relocating a pattern to EOF.
         code: "foo\nbar/",
         errors: [
           { messageId: "missingHeading", data: { heading: "# files" } },
-          { messageId: "wrongGroup", data: { pattern: "foo", group: "files" } },
           { messageId: "missingHeading", data: { heading: "# folders" } },
-          {
-            messageId: "wrongGroup",
-            data: { pattern: "bar/", group: "folders" },
-          },
         ],
-        output: "# files\nfoo\n\n# folders\nbar/",
+        output: "# files\nfoo\n\nbar/",
       },
       {
         // An anchor-less negation sitting in the wrong section is
@@ -102,14 +98,12 @@ describe("group-patterns", () => {
       },
       {
         // Regression: on a CRLF file, the missing-heading insertion and the
-        // moved pattern's own line must both keep "\r\n", not "\n".
+        // arranged pattern's own line must both keep "\r\n", not "\n". The
+        // whole section is built in one atomic fix, converging fully in a
+        // single pass.
         code: "# files\r\nfoo\r\nbar/\r\n",
         errors: [
           { messageId: "missingHeading", data: { heading: "# folders" } },
-          {
-            messageId: "wrongGroup",
-            data: { pattern: "bar/", group: "folders" },
-          },
         ],
         output: "# files\r\nfoo\r\n\r\n# folders\r\nbar/\r\n",
       },
@@ -144,12 +138,50 @@ describe("group-patterns", () => {
         code: "# files\nfoo\nbar/\r\n",
         errors: [
           { messageId: "missingHeading", data: { heading: "# folders" } },
-          {
-            messageId: "wrongGroup",
-            data: { pattern: "bar/", group: "folders" },
-          },
         ],
         output: "# files\nfoo\n\r\n# folders\r\nbar/\r\n",
+      },
+      {
+        // `order` genuinely governs arrangement once one section already
+        // exists: with folders sorted first, the missing folders section is
+        // inserted BEFORE the existing files section rather than after it.
+        // Converges fully in one pass.
+        code: "# files\nfoo\nbar/\n",
+        options: [
+          {
+            folderHeading: "# folders",
+            fileHeading: "# files",
+            order: ["folders", "files"],
+          },
+        ],
+        errors: [
+          { messageId: "missingHeading", data: { heading: "# folders" } },
+        ],
+        output: "# folders\nbar/\n\n# files\nfoo\n",
+      },
+      {
+        // Mirror of the default-order case above, but with the existing
+        // section being "folders" and the missing one "files": under the
+        // files-first default, the missing files section is inserted
+        // BEFORE the existing folders section.
+        code: "# folders\nbar/\nfoo\n",
+        errors: [{ messageId: "missingHeading", data: { heading: "# files" } }],
+        output: "# files\nfoo\n\n# folders\nbar/\n",
+      },
+      {
+        // Same starting file as above, but with folders sorted first: the
+        // missing files section is now inserted AFTER the existing folders
+        // section instead.
+        code: "# folders\nbar/\nfoo\n",
+        options: [
+          {
+            folderHeading: "# folders",
+            fileHeading: "# files",
+            order: ["folders", "files"],
+          },
+        ],
+        errors: [{ messageId: "missingHeading", data: { heading: "# files" } }],
+        output: "# folders\nbar/\n\n# files\nfoo\n",
       },
     ],
   });

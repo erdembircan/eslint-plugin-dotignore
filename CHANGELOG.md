@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `group-patterns` now defaults to listing the files group before the folders group (`order: ["files", "folders"]`).
+- `no-redundant-pattern` now flags a covered pattern regardless of whether it appears before or after the pattern covering it.
+
 ## [1.0.0] - 2026-08-26
 
 ### Added

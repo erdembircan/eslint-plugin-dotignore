@@ -1,15 +1,42 @@
 import { computeGroupViolations } from "../engines/group.js";
-import type {
-  GroupOptions,
-  InsertHeadingEdit,
-  MoveEdit,
-} from "../engines/group.js";
-import type { GitignoreFile } from "../parser/index.js";
+import type { ArrangeEdit, GroupOptions, MoveEdit } from "../engines/group.js";
+import type { GitignoreFile, GitignoreNode } from "../parser/index.js";
 import type { GitignoreRuleDefinition } from "./types.js";
 import { detectLineTerminator, endOfLineIncludingTerminator } from "./utils.js";
 
 type Options = [GroupOptions];
 type MessageIds = "wrongGroup" | "missingHeading";
+
+/** Merges a list of nodes' own-line ranges (including their line
+ * terminator) into the smallest set of non-touching `[start, end)` ranges,
+ * in body order. Shared by both fix kinds below, which each remove a list
+ * of lines (a pattern cluster, every cluster in a group, and/or blank
+ * lines that would otherwise dangle) from wherever they currently sit.
+ * `nodes` must already be in body order. */
+function mergedRemovalRanges(
+  nodes: readonly GitignoreNode[],
+  body: readonly GitignoreNode[],
+  textLength: number,
+): Array<[number, number]> {
+  const ranges = nodes.map((member): [number, number] => {
+    const bodyIndex = body.indexOf(member);
+    return [
+      member.range[0],
+      endOfLineIncludingTerminator(body, bodyIndex, textLength),
+    ];
+  });
+
+  const merged: Array<[number, number]> = [];
+  for (const range of ranges) {
+    const last = merged[merged.length - 1];
+    if (last && range[0] <= last[1]) {
+      last[1] = Math.max(last[1], range[1]);
+    } else {
+      merged.push([range[0], range[1]]);
+    }
+  }
+  return merged;
+}
 
 const rule: GitignoreRuleDefinition<Options, MessageIds> = {
   meta: {
@@ -34,7 +61,7 @@ const rule: GitignoreRuleDefinition<Options, MessageIds> = {
             maxItems: 2,
             uniqueItems: true,
             description:
-              "The order in which newly-needed headings are inserted, when both are missing.",
+              "The order in which groups are arranged when their headings are inserted.",
           },
         },
         additionalProperties: false,
@@ -44,7 +71,7 @@ const rule: GitignoreRuleDefinition<Options, MessageIds> = {
       {
         folderHeading: "# folders",
         fileHeading: "# files",
-        order: ["folders", "files"],
+        order: ["files", "folders"],
       },
     ],
     docs: {
@@ -81,30 +108,11 @@ const rule: GitignoreRuleDefinition<Options, MessageIds> = {
               ...(moveEdit
                 ? {
                     fix(fixer) {
-                      const ranges = moveEdit.cluster.map(
-                        (member): [number, number] => {
-                          const bodyIndex = body.indexOf(member);
-                          return [
-                            member.range[0],
-                            endOfLineIncludingTerminator(
-                              body,
-                              bodyIndex,
-                              textLength,
-                            ),
-                          ];
-                        },
+                      const merged = mergedRemovalRanges(
+                        moveEdit.cluster,
+                        body,
+                        textLength,
                       );
-
-                      const merged: Array<[number, number]> = [];
-                      for (const range of ranges) {
-                        const last = merged[merged.length - 1];
-                        if (last && range[0] <= last[1]) {
-                          last[1] = Math.max(last[1], range[1]);
-                        } else {
-                          merged.push([range[0], range[1]]);
-                        }
-                      }
-
                       const edits = merged.map((range) =>
                         fixer.removeRange(range),
                       );
@@ -141,20 +149,49 @@ const rule: GitignoreRuleDefinition<Options, MessageIds> = {
                 : {}),
             });
           } else {
-            const insertEdit = violation.fix as InsertHeadingEdit;
+            const arrangeEdit = violation.fix as ArrangeEdit;
             context.report({
               node: violation.node,
               messageId: "missingHeading",
-              data: { heading: insertEdit.heading },
+              data: { heading: arrangeEdit.heading },
               fix(fixer) {
-                const insertBeforeNode = body[insertEdit.beforeIndex]!;
-                const insertionPoint = insertBeforeNode.range[0];
-                const eol = detectLineTerminator(sourceCode, insertBeforeNode);
-                const prefix = insertEdit.blankLineBefore ? eol : "";
-                return fixer.insertTextBeforeRange(
-                  [insertionPoint, insertionPoint],
-                  `${prefix}${insertEdit.heading}${eol}`,
+                const nodesToRemove: GitignoreNode[] = [
+                  ...arrangeEdit.clusters.flat(),
+                  ...arrangeEdit.staleBlankLines,
+                ].sort((a, b) => a.range[0] - b.range[0]);
+                const merged = mergedRemovalRanges(
+                  nodesToRemove,
+                  body,
+                  textLength,
                 );
+                const edits = merged.map((range) => fixer.removeRange(range));
+
+                const insertBeforeNode =
+                  arrangeEdit.insertBeforeIndex < body.length
+                    ? body[arrangeEdit.insertBeforeIndex]!
+                    : body[body.length - 1]!;
+                const insertionPoint =
+                  arrangeEdit.insertBeforeIndex < body.length
+                    ? insertBeforeNode.range[0]
+                    : textLength;
+                const eol = detectLineTerminator(sourceCode, insertBeforeNode);
+
+                const sectionText = arrangeEdit.clusters
+                  .map((cluster) => cluster.map((p) => p.raw).join(eol))
+                  .join(eol);
+                const insertText =
+                  `${arrangeEdit.blankLineBefore ? eol : ""}` +
+                  `${arrangeEdit.heading}${eol}${sectionText}${eol}` +
+                  `${arrangeEdit.blankLineAfter ? eol : ""}`;
+
+                edits.push(
+                  fixer.insertTextBeforeRange(
+                    [insertionPoint, insertionPoint],
+                    insertText,
+                  ),
+                );
+
+                return edits;
               },
             });
           }

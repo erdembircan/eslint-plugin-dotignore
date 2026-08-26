@@ -14,7 +14,7 @@ Separates directory-only patterns (trailing `/`) from everything else and places
 
 - `folderHeading` (string, default `"# folders"`) — the heading comment for directory-only patterns.
 - `fileHeading` (string, default `"# files"`) — the heading comment for all other patterns.
-- `order` (array of `"folders"` and `"files"`, both required and unique, default `["folders", "files"]`) — when both headings need to be newly inserted, the order in which they're created.
+- `order` (array of `"folders"` and `"files"`, both required and unique, default `["files", "folders"]`) — the order in which groups are arranged when their headings are inserted.
 
 ## Examples
 
@@ -46,7 +46,7 @@ foo
 bar
 ```
 
-Fixable: a misplaced pattern (with its glued negations, if any) is moved to the end of its correct section, and a missing heading is inserted above that group's first pattern.
+Fixable: a misplaced pattern (with its glued negations, if any) is moved to the end of its correct section. A missing heading is fixed by building that group's whole section from scratch — the heading followed by every one of its patterns gathered from wherever they already sit — and placing it relative to `order`: before an already-existing other-group section if the missing group sorts first, after it otherwise; when neither heading exists yet, both sections are built the same way, converging to `order`'s arrangement across a couple of fix passes.
 
 Before:
 
@@ -63,5 +63,35 @@ After:
 # folders
 # files
 bar/
+foo
+```
+
+`order` only governs arrangement when a heading is actually being inserted — it never moves an already-existing section. With the default `order` (`["files", "folders"]`) and only the folders heading missing:
+
+Before:
+
+```gitignore
+# files
+foo
+bar/
+```
+
+After:
+
+```gitignore
+# files
+foo
+
+# folders
+bar/
+```
+
+With `order: ["folders", "files"]` instead, the same input's missing folders section is inserted _before_ the existing files section:
+
+```gitignore
+# folders
+bar/
+
+# files
 foo
 ```
