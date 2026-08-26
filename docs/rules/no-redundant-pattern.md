@@ -6,7 +6,7 @@
 
 <!-- end auto-generated rule header -->
 
-Flags patterns whose matches are entirely covered by an earlier pattern, like `dist/foo.js` after `dist/`. Coverage is decided by real pattern containment, not string prefixes, so globs are handled correctly — and the rule stays silent whenever a later negation could make the "redundant" line matter.
+Flags patterns whose matches are entirely covered by an earlier pattern, like `dist/foo.js` after `dist/`. Coverage is decided by real pattern containment, not string prefixes, so globs are handled correctly — and the rule stays silent whenever a later negation could make the 'redundant' line matter.
 
 ## Examples
 
