@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compareEffectiveText, sortBlock } from "../../src/engines/sort.js";
+import { compareEffectiveText, sortBlock, sortRun, splitIntoRuns } from "../../src/engines/sort.js";
 import type { SortOptions } from "../../src/engines/sort.js";
 import { parse } from "../../src/parser/index.js";
 import type { Pattern } from "../../src/parser/index.js";
@@ -114,5 +114,39 @@ describe("sortBlock", () => {
     const sorted = sortBlock(patterns, DEFAULT_OPTIONS);
     expect(sorted).not.toBeNull();
     expect(effectiveTexts(sorted!)).toEqual(["file1", "file2", "file10"]);
+  });
+});
+
+describe("splitIntoRuns", () => {
+  it("returns one run for a block with no barriers", () => {
+    const patterns = patternsFrom("a\nb\nc\n");
+    expect(splitIntoRuns(patterns)).toHaveLength(1);
+    expect(effectiveTexts(splitIntoRuns(patterns)[0]!)).toEqual(["a", "b", "c"]);
+  });
+
+  it("splits on negated barriers, dropping the barriers themselves", () => {
+    const patterns = patternsFrom("a\nb\n!x\nc\nd\n");
+    const runs = splitIntoRuns(patterns);
+    expect(runs).toHaveLength(2);
+    expect(effectiveTexts(runs[0]!)).toEqual(["a", "b"]);
+    expect(effectiveTexts(runs[1]!)).toEqual(["c", "d"]);
+  });
+
+  it("produces no runs when every pattern is a barrier", () => {
+    const patterns = patternsFrom("!a\n!b\n");
+    expect(splitIntoRuns(patterns)).toEqual([]);
+  });
+
+  it("produces no runs for an empty block", () => {
+    expect(splitIntoRuns([])).toEqual([]);
+  });
+});
+
+describe("sortRun", () => {
+  it("sorts a run per the given options without mutating the input", () => {
+    const patterns = patternsFrom("banana\napple\n");
+    const sorted = sortRun(patterns, DEFAULT_OPTIONS);
+    expect(effectiveTexts(sorted)).toEqual(["apple", "banana"]);
+    expect(effectiveTexts(patterns)).toEqual(["banana", "apple"]);
   });
 });

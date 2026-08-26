@@ -125,9 +125,7 @@ export function sortBlock(patterns: readonly Pattern[], options: SortOptions): P
     const runEnd = i;
     if (runEnd - runStart > 1) {
       const run = result.slice(runStart, runEnd);
-      const sorted = [...run].sort((a, b) =>
-        compareEffectiveText(analyze(a.pattern).effective, analyze(b.pattern).effective, options),
-      );
+      const sorted = sortRun(run, options);
       for (let k = 0; k < sorted.length; k += 1) {
         if (result[runStart + k] !== sorted[k]) {
           changed = true;
@@ -140,4 +138,35 @@ export function sortBlock(patterns: readonly Pattern[], options: SortOptions): P
   }
 
   return changed ? result : null;
+}
+
+/** Splits a block into its maximal runs of non-negated patterns, dropping
+ * the negated barriers between them entirely (each returned run is itself
+ * already in barrier-free, contiguous block order). */
+export function splitIntoRuns(patterns: readonly Pattern[]): Pattern[][] {
+  const runs: Pattern[][] = [];
+  let current: Pattern[] = [];
+
+  for (const pattern of patterns) {
+    if (pattern.negated) {
+      if (current.length > 0) {
+        runs.push(current);
+      }
+      current = [];
+    } else {
+      current.push(pattern);
+    }
+  }
+  if (current.length > 0) {
+    runs.push(current);
+  }
+
+  return runs;
+}
+
+/** Sorts one run (already free of negated barriers) per `options`. */
+export function sortRun(run: readonly Pattern[], options: SortOptions): Pattern[] {
+  return [...run].sort((a, b) =>
+    compareEffectiveText(analyze(a.pattern).effective, analyze(b.pattern).effective, options),
+  );
 }
