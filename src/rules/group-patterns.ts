@@ -44,7 +44,7 @@ const rule: GitignoreRuleDefinition<Options, MessageIds> = {
       {
         folderHeading: "# folders",
         fileHeading: "# files",
-        order: ["folders", "files"],
+        order: ["files", "folders"],
       },
     ],
     docs: {
