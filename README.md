@@ -1,4 +1,4 @@
-# eslint-plugin-dotignore
+# <img src="https://raw.githubusercontent.com/erdembircan/eslint-plugin-dotignore/main/assets/logo.png" alt="" height="40" /> eslint-plugin-dotignore
 
 [![CI](https://github.com/erdembircan/eslint-plugin-dotignore/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/erdembircan/eslint-plugin-dotignore/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/eslint-plugin-dotignore.svg)](https://www.npmjs.com/package/eslint-plugin-dotignore)
