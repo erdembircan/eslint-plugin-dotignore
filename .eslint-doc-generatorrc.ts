@@ -1,4 +1,5 @@
 import prettier from "prettier";
+import type { GenerateOptions } from "eslint-doc-generator";
 
 /**
  * Our docs (README.md, docs/rules/*.md) are Prettier-formatted like every
@@ -9,10 +10,8 @@ import prettier from "prettier";
  * as a postprocess step (the pattern documented in eslint-doc-generator's
  * own README) keeps generated output and `pnpm lint` in agreement without
  * hand-formatting anything.
- *
- * @type {import("eslint-doc-generator").GenerateOptions}
  */
-const config = {
+const config: GenerateOptions = {
   postprocess: async (content, path) => {
     const fileInfo = await prettier.getFileInfo(path, {
       ignorePath: ".prettierignore",
