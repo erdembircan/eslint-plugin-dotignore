@@ -14,7 +14,7 @@ Separates directory-only patterns (trailing `/`) from everything else and places
 
 - `folderHeading` (string, default `"# folders"`) — the heading comment for directory-only patterns.
 - `fileHeading` (string, default `"# files"`) — the heading comment for all other patterns.
-- `order` (array of `"folders"` and `"files"`, both required and unique, default `["folders", "files"]`) — when both headings need to be newly inserted, the order in which they're created.
+- `order` (array of `"folders"` and `"files"`, both required and unique, default `["files", "folders"]`) — when both headings need to be newly inserted, the order in which they're created.
 
 ## Examples
 
