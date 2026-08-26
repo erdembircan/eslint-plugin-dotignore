@@ -223,6 +223,14 @@ describe("e2e: group-patterns cross-rule fix-quality regressions", () => {
     // as redundant/duplicate (emptying the heading, which then also gets
     // removed since it reaches EOF), the separator blank was left dangling
     // at EOF with nothing left to separate.
+    //
+    // This also exercises no-redundant-pattern's bidirectional check: with
+    // the files-first default, group-patterns sorts "dist/bundle.js"
+    // (files) before "dist/" (folders) in file order, which would have
+    // silently hidden the redundancy under the rule's old earlier-only
+    // direction (it only flagged a LATER pattern covered by an EARLIER
+    // one). Flagging in both directions keeps this catch independent of
+    // which group's section happens to sort first.
     const linter = new Linter({ configType: "flat" });
     const config: ConfigObject = {
       files: ["**/.gitignore"],
