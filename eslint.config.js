@@ -20,6 +20,15 @@ export default tseslint.config(
         tsconfigRootDir: import.meta.dirname,
       },
     },
+    rules: {
+      // Interface methods (e.g. the Language API's parse/createSourceCode)
+      // sometimes require a parameter we don't use; underscore-prefixing it
+      // documents that intentionally.
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_" },
+      ],
+    },
   },
   prettier,
 );
