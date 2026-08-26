@@ -81,7 +81,7 @@ export default [
 | [no-empty-path-segment](docs/rules/no-empty-path-segment.md)             | disallow empty path segments                                                | ✅ 🔒 |     |     | 💡  |
 | [no-invalid-syntax](docs/rules/no-invalid-syntax.md)                     | disallow patterns that violate the gitignore specification                  | ✅ 🔒 |     |     |     |
 | [no-misplaced-globstar](docs/rules/no-misplaced-globstar.md)             | disallow '**' in positions where it loses its special meaning               | ✅ 🔒 |     | 🔧  |     |
-| [no-redundant-pattern](docs/rules/no-redundant-pattern.md)               | disallow patterns already covered by an earlier pattern                     | ✅ 🔒 |     | 🔧  |     |
+| [no-redundant-pattern](docs/rules/no-redundant-pattern.md)               | disallow patterns already covered by another pattern                        | ✅ 🔒 |     | 🔧  |     |
 | [no-trailing-whitespace](docs/rules/no-trailing-whitespace.md)           | disallow unescaped trailing whitespace                                      | 🔒    | ✅  | 🔧  |     |
 | [no-unreachable-negation](docs/rules/no-unreachable-negation.md)         | disallow negations that Git can never apply                                 | ✅ 🔒 |     |     | 💡  |
 | [require-dir-slash](docs/rules/require-dir-slash.md)                     | require a trailing slash on patterns that match existing directories        | 🔒    |     | 🔧  |     |
