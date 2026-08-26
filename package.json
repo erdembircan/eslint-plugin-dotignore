@@ -41,7 +41,7 @@
   },
   "scripts": {
     "build": "tsdown",
-    "lint": "eslint .",
+    "lint": "pnpm build && eslint .",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
     "test": "vitest run",

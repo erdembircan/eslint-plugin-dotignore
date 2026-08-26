@@ -1,6 +1,13 @@
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import prettier from "eslint-config-prettier";
+// Statically imported from the built output rather than `src/` -- this
+// dogfoods the actual shipped bundle against the repo's own `.gitignore`,
+// not the TypeScript source. That means `pnpm build` must run before this
+// config can be loaded at all; the `lint` script guarantees that ordering
+// (see package.json), and it's a deliberate build-before-lint tradeoff
+// rather than an oversight -- no jiti/ts-node loader here to paper over it.
+import dotignore from "./dist/index.js";
 
 export default tseslint.config(
   {
@@ -31,4 +38,5 @@ export default tseslint.config(
     },
   },
   prettier,
+  dotignore.configs.strict,
 );
