@@ -94,6 +94,21 @@ export default [
 - `configs.recommended` — spec violations and dead patterns as errors, whitespace and style hygiene as warnings. Reordering rules (`sort-patterns`, `group-patterns`) and the filesystem-aware `require-dir-slash` stay off — enable them deliberately.
 - `configs.strict` — every rule as an error.
 
+## Using alongside Prettier
+
+Formatter rules like `prettier/prettier` (from `eslint-plugin-prettier`) apply to every file their config matches — including `.gitignore`, which Prettier cannot parse. If you use such a setup, scope it to the files it understands:
+
+```js
+import prettierRecommended from "eslint-plugin-prettier/recommended";
+
+export default [
+  { ...prettierRecommended, files: ["**/*.{js,ts,jsx,tsx}"] },
+  dotignore.configs.recommended,
+];
+```
+
+This applies to any rule that assumes JavaScript syntax — the same scoping every non-JavaScript ESLint language (JSON, Markdown, CSS) calls for.
+
 ## The parser, standalone
 
 The gitignore parser is exported on its own, free of any ESLint dependency:
