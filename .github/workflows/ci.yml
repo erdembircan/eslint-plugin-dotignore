@@ -35,6 +35,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.16.1
+
       # license-wizard requires Node.js >= 22.13.0; kept as its own job
       # (rather than gated inside the test matrix) since it's a single
       # global check, not something that varies per Node version. Runs on
@@ -42,9 +46,11 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 24
+          cache: pnpm
 
+      - run: pnpm install --frozen-lockfile
       - name: Check the license is in sync
-        run: npx license-wizard --verify --strict
+        run: pnpm license:verify
 
   docs:
     runs-on: ubuntu-latest
