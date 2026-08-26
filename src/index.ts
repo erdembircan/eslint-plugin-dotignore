@@ -24,6 +24,7 @@ const plugin: Plugin = {
   meta: {
     name: pkg.name,
     version: pkg.version,
+    namespace: "dotignore",
   },
   languages: {
     gitignore: gitignoreLanguage,
