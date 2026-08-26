@@ -45,18 +45,18 @@ function toRegisteredRuleEntries(
 }
 
 /**
- * Builds the `recommended` and `all` shareable configs for the plugin.
+ * Builds the `recommended` and `strict` shareable configs for the plugin.
  * @param plugin The plugin object to self-reference in each config's
  * `plugins` field. Built after the plugin's other members are defined, per
  * the standard self-referencing plugin pattern.
  */
 export function buildConfigs(plugin: Plugin): {
   recommended: ConfigObject;
-  all: ConfigObject;
+  strict: ConfigObject;
 } {
-  const allSeverities: Record<string, SeverityName> = {};
+  const strictSeverities: Record<string, SeverityName> = {};
   for (const ruleName of Object.keys(rules)) {
-    allSeverities[ruleName] = "error";
+    strictSeverities[ruleName] = "error";
   }
 
   return {
@@ -66,11 +66,11 @@ export function buildConfigs(plugin: Plugin): {
       language: "dotignore/gitignore",
       rules: toRegisteredRuleEntries(recommendedSeverities),
     },
-    all: {
+    strict: {
       files: ["**/.gitignore"],
       plugins: { dotignore: plugin },
       language: "dotignore/gitignore",
-      rules: toRegisteredRuleEntries(allSeverities),
+      rules: toRegisteredRuleEntries(strictSeverities),
     },
   };
 }

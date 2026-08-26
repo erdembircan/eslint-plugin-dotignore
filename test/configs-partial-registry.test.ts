@@ -14,13 +14,13 @@ describe("buildConfigs with a partial registry", () => {
     const plugin: Plugin = {
       meta: { name: "eslint-plugin-dotignore", version: "1.0.0" },
     };
-    const { recommended, all } = buildConfigs(plugin);
+    const { recommended, strict } = buildConfigs(plugin);
 
     // Only "no-invalid-syntax" is "registered" here, even though
     // recommendedSeverities lists many more rule names.
     expect(recommended.rules).toEqual({
       "dotignore/no-invalid-syntax": "error",
     });
-    expect(all.rules).toEqual({ "dotignore/no-invalid-syntax": "error" });
+    expect(strict.rules).toEqual({ "dotignore/no-invalid-syntax": "error" });
   });
 });

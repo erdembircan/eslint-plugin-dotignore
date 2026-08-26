@@ -25,7 +25,7 @@ function baseConfig(): ConfigObject {
     // ESLint's flat config resolution requires some config to have a `files`
     // pattern matching the given filename once one is provided (a config
     // without `files` is not treated as universal in that case) — this
-    // mirrors the plugin's own `recommended`/`all` configs.
+    // mirrors the plugin's own `recommended`/`strict` configs.
     files: ["**/.gitignore"],
     plugins: { dotignore: plugin },
     language: "dotignore/gitignore",

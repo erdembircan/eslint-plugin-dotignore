@@ -7,10 +7,10 @@ describe("buildConfigs", () => {
   const fakePlugin: Plugin = {
     meta: { name: "eslint-plugin-dotignore", version: "1.0.0" },
   };
-  const { recommended, all } = buildConfigs(fakePlugin);
+  const { recommended, strict } = buildConfigs(fakePlugin);
 
   it("targets .gitignore files and the plugin's language for both configs", () => {
-    for (const config of [recommended, all]) {
+    for (const config of [recommended, strict]) {
       expect(config.files).toEqual(["**/.gitignore"]);
       expect(config.language).toBe("dotignore/gitignore");
       expect(config.plugins).toEqual({ dotignore: fakePlugin });
@@ -19,7 +19,7 @@ describe("buildConfigs", () => {
 
   it("self-references the exact plugin instance passed in", () => {
     expect(recommended.plugins?.dotignore).toBe(fakePlugin);
-    expect(all.plugins?.dotignore).toBe(fakePlugin);
+    expect(strict.plugins?.dotignore).toBe(fakePlugin);
   });
 
   it("recommended contains exactly all 12 recommendedSeverities entries now that every one of them is registered", () => {
@@ -42,7 +42,7 @@ describe("buildConfigs", () => {
     expect(Object.keys(recommended.rules ?? {}).sort()).toEqual(expectedKeys);
   });
 
-  it("excludes the opinionated formatting rules from recommended, but includes them in all", () => {
+  it("excludes the opinionated formatting rules from recommended, but includes them in strict", () => {
     // sort-patterns, group-patterns, and require-dir-slash are
     // deliberately absent from recommendedSeverities (they're formatting
     // preferences, not correctness/consistency rules) even though all
@@ -54,7 +54,7 @@ describe("buildConfigs", () => {
     ]) {
       expect(rules).toHaveProperty(name);
       expect(recommended.rules).not.toHaveProperty(`dotignore/${name}`);
-      expect(all.rules).toHaveProperty(`dotignore/${name}`, "error");
+      expect(strict.rules).toHaveProperty(`dotignore/${name}`, "error");
     }
   });
 
@@ -62,18 +62,18 @@ describe("buildConfigs", () => {
     expect(Object.keys(rules)).toHaveLength(15);
   });
 
-  it("all contains every registered rule, each set to error", () => {
+  it("strict contains every registered rule, each set to error", () => {
     const expectedKeys = Object.keys(rules)
       .map((name) => `dotignore/${name}`)
       .sort();
-    expect(Object.keys(all.rules ?? {}).sort()).toEqual(expectedKeys);
-    for (const severity of Object.values(all.rules ?? {})) {
+    expect(Object.keys(strict.rules ?? {}).sort()).toEqual(expectedKeys);
+    for (const severity of Object.values(strict.rules ?? {})) {
       expect(severity).toBe("error");
     }
   });
 
   it("never includes rule options, only severities", () => {
-    for (const config of [recommended, all]) {
+    for (const config of [recommended, strict]) {
       for (const value of Object.values(config.rules ?? {})) {
         expect(typeof value === "string" || typeof value === "number").toBe(
           true,

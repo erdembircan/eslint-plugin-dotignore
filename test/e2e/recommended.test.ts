@@ -7,13 +7,13 @@ import plugin from "../../src/index.js";
 // `Record<string, LegacyConfigObject | ConfigObject | ConfigObject[]> | undefined`,
 // but src/index.ts assigns it synchronously right after building the plugin
 // object (before export) via `buildConfigs`, which always produces flat
-// `ConfigObject`s for both `recommended` and `all` -- by the time anything
+// `ConfigObject`s for both `recommended` and `strict` -- by the time anything
 // can import `plugin`, both are always present and always flat configs.
 // These assertions just narrow past the generic type, not past any real
 // uncertainty (same `ConfigObject` type used in test/language/integration.test.ts).
 const configs = plugin.configs!;
 const recommended = configs.recommended as ConfigObject;
-const all = configs.all as ConfigObject;
+const strict = configs.strict as ConfigObject;
 
 /**
  * A single messy, realistic-looking `.gitignore` exercising eleven of the
@@ -155,16 +155,16 @@ describe("e2e: configs.recommended against inline fixtures", () => {
     expect(messages).toEqual([]);
   });
 
-  it("smoke test: configs.all runs without crashing on the messy fixture", () => {
+  it("smoke test: configs.strict runs without crashing on the messy fixture", () => {
     const linter = new Linter({ configType: "flat" });
 
     expect(() => {
-      const messages = linter.verify(MESSY, all, {
+      const messages = linter.verify(MESSY, strict, {
         filename: ".gitignore",
       });
-      // Every rule in the registry is "error" in `all`, so it should find
-      // at least as much as `recommended` did, across every rule id it
-      // reports -- not asserting exact content here since `all` also
+      // Every rule in the registry is "error" in `strict`, so it should
+      // find at least as much as `recommended` did, across every rule id
+      // it reports -- not asserting exact content here since `strict` also
       // includes the filesystem-aware `require-dir-slash`, whose findings
       // depend on the real directory tree next to wherever this test
       // happens to run, and the reordering rules (`sort-patterns`,
@@ -177,9 +177,9 @@ describe("e2e: configs.recommended against inline fixtures", () => {
 
 /**
  * Regression coverage for two fix-quality bugs found in a full-tarball
- * consumer check under `configs.all`. Scoped to the specific rules
- * involved (rather than `all` itself) so these stay filesystem-free:
- * `all` also enables the fs-aware `require-dir-slash`, whose findings
+ * consumer check under `configs.strict`. Scoped to the specific rules
+ * involved (rather than `strict` itself) so these stay filesystem-free:
+ * `strict` also enables the fs-aware `require-dir-slash`, whose findings
  * depend on the real directory tree next to wherever a test runs.
  */
 describe("e2e: group-patterns cross-rule fix-quality regressions", () => {
