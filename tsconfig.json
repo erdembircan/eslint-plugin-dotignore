@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
+    "types": ["node"],
+    "declaration": false,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUncheckedIndexedAccess": true
+  },
+  "include": ["src", "test"]
+}

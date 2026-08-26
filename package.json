@@ -1,0 +1,73 @@
+{
+  "name": "eslint-plugin-dotignore",
+  "version": "1.0.0",
+  "description": "Lint, sort, group, and fix .gitignore files — an ESLint language plugin with a spec-exact parser.",
+  "keywords": [
+    "eslint",
+    "eslintplugin",
+    "eslint-plugin",
+    "gitignore",
+    "ignore",
+    "dotignore",
+    "lint",
+    "sort",
+    "format",
+    "language",
+    "ast"
+  ],
+  "author": "Erdem Bircan",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/erdembircan/eslint-plugin-dotignore.git"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./parser": {
+      "types": "./dist/parser.d.ts",
+      "default": "./dist/parser.js"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "lint": "eslint .",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm build && pnpm test"
+  },
+  "peerDependencies": {
+    "eslint": ">=9.7.0"
+  },
+  "packageManager": "pnpm@10.16.1",
+  "dependencies": {
+    "@eslint/plugin-kit": "^0.7.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.3.0",
+    "@vitest/coverage-v8": "^4.1.11",
+    "eslint": "^10.9.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-doc-generator": "^3.7.1",
+    "ignore": "^7.0.6",
+    "prettier": "^3.9.6",
+    "tsdown": "^0.22.14",
+    "typescript": "^7.0.2",
+    "typescript-eslint": "^8.68.0",
+    "vitest": "^4.1.11"
+  }
+}
