@@ -18,7 +18,7 @@ Git never complains about a `.gitignore` — it silently ignores what it can't p
 pnpm add -D eslint eslint-plugin-dotignore
 ```
 
-Requires ESLint ≥ 9.7.0 (flat config) and Node ≥ 20.
+Requires ESLint ≥ 9.7.0 (flat config) and Node ≥ 22.18.
 
 ## Usage
 
