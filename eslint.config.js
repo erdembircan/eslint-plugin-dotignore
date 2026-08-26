@@ -1,6 +1,6 @@
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
-import prettier from "eslint-config-prettier";
+import prettierRecommended from "eslint-plugin-prettier/recommended";
 import eslintPlugin from "eslint-plugin-eslint-plugin";
 import nodePlugin from "eslint-plugin-n";
 // Statically imported from the built output rather than `src/` -- this
@@ -59,6 +59,15 @@ export default tseslint.config(
       node: { version: ">=22.18.0" },
     },
   },
-  prettier,
+  {
+    // `eslint-plugin-prettier/recommended` ships with no `files` scoping of
+    // its own (it's meant to apply universally), which collides with our
+    // `.gitignore` dogfooding: Prettier has no parser for gitignore syntax,
+    // so letting `prettier/prettier` reach it produces a hard parsing
+    // error, not just a missed check. Scoped here to the same JS/TS files
+    // as the rest of this config instead.
+    ...prettierRecommended,
+    files: ["src/**/*.ts", "test/**/*.ts", "*.config.ts", "*.config.js"],
+  },
   dotignore.configs.strict,
 );
