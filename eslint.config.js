@@ -1,6 +1,8 @@
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import prettier from "eslint-config-prettier";
+import eslintPlugin from "eslint-plugin-eslint-plugin";
+import nodePlugin from "eslint-plugin-n";
 // Statically imported from the built output rather than `src/` -- this
 // dogfoods the actual shipped bundle against the repo's own `.gitignore`,
 // not the TypeScript source. That means `pnpm build` must run before this
@@ -35,6 +37,26 @@ export default tseslint.config(
         "error",
         { argsIgnorePattern: "^_" },
       ],
+    },
+  },
+  {
+    // Plugin-author linting, per ESLint's own plugin-development docs
+    // (https://eslint.org/docs/latest/extend/plugins). Scoped to the rule
+    // implementations themselves, not the whole rules/ directory (types.ts,
+    // utils.ts, fs-host.ts, index.ts aren't rule files, and this preset's
+    // rule-shape checks are harmless no-ops on them regardless).
+    files: ["src/rules/**/*.ts"],
+    extends: [eslintPlugin.configs.recommended],
+  },
+  {
+    // Node-compat linting for the whole source tree. Reads the supported
+    // Node range from `package.json`'s `engines` field by default; set
+    // explicitly here too so it's unambiguous and doesn't silently drift
+    // if that field's exact value or lookup ever changes.
+    files: ["src/**/*.ts"],
+    extends: [nodePlugin.configs["flat/recommended-module"]],
+    settings: {
+      node: { version: ">=22.18.0" },
     },
   },
   prettier,
