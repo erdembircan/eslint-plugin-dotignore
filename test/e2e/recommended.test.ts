@@ -206,8 +206,11 @@ describe("e2e: group-patterns cross-rule fix-quality regressions", () => {
       filename: ".gitignore",
     });
 
+    // Files-first is the default order since the group-arrangement engine
+    // redesign; the alphabetization within each section is what this test
+    // actually exercises, unaffected by which section sorts first.
     expect(result.output).toBe(
-      "# folders\nbanana/\nzebra/\n\n# files\napple\nyak\n",
+      "# files\napple\nyak\n\n# folders\nbanana/\nzebra/\n",
     );
     expect(result.messages).toEqual([]);
   });
@@ -243,5 +246,33 @@ describe("e2e: group-patterns cross-rule fix-quality regressions", () => {
       expect(result.output).toBe("# folders\ndist/\n");
       expect(result.messages).toEqual([]);
     }
+  });
+
+  it("arranges a neither-heading-exists file into files-first order under the default `order` option (the project's own former .gitignore shape)", () => {
+    // This is the literal repro that proved `order` was vestigial before
+    // the group-arrangement engine redesign: this project's own
+    // .gitignore, stripped of both headings and its separator blank, fed
+    // straight back through `--fix` with only group-patterns' default
+    // options. It must now genuinely converge to files-first (the
+    // "# files" section before "# folders"), not just insert both
+    // headings wherever their patterns already happened to sit.
+    const linter = new Linter({ configType: "flat" });
+    const config: ConfigObject = {
+      files: ["**/.gitignore"],
+      plugins: { dotignore: plugin },
+      language: "dotignore/gitignore",
+      rules: { "dotignore/group-patterns": "error" },
+    };
+
+    const result = linter.verifyAndFix(
+      ".claude/\ncoverage/\ndist/\nnode_modules/\n.DS_Store\n",
+      config,
+      { filename: ".gitignore" },
+    );
+
+    expect(result.output).toBe(
+      "# files\n.DS_Store\n\n# folders\n.claude/\ncoverage/\ndist/\nnode_modules/\n",
+    );
+    expect(result.messages).toEqual([]);
   });
 });
