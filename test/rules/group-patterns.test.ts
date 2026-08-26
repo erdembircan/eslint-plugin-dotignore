@@ -85,6 +85,21 @@ describe("group-patterns", () => {
           { messageId: "wrongGroup", data: { pattern: "zzz", group: "files" } },
         ],
       },
+      {
+        // Regression: a blank line already separates the folders section
+        // from "# files". Moving "baz/" into the folders section must
+        // land it right after "bar/" (before that blank), not after the
+        // blank -- otherwise the separator ends up sandwiched between two
+        // folders-group patterns instead of marking the section boundary.
+        code: "# folders\nbar/\n\n# files\nfoo\nbaz/\n",
+        errors: [
+          {
+            messageId: "wrongGroup",
+            data: { pattern: "baz/", group: "folders" },
+          },
+        ],
+        output: "# folders\nbar/\nbaz/\n\n# files\nfoo\n",
+      },
     ],
   });
 });

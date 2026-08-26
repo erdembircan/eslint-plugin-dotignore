@@ -116,6 +116,58 @@ describe("computeGroupViolations", () => {
     });
   });
 
+  describe("move destination skips a trailing separator blank line", () => {
+    it("lands a move right after the destination section's last pattern, before the blank line separating it from the next heading", () => {
+      // Body: 0 "# folders", 1 "bar/", 2 BlankLine, 3 "# files", 4 "foo",
+      // 5 "baz/" (misplaced folders-type pattern). Naively using the
+      // section's endIndex (3, the "# files" heading) would insert "baz/"
+      // right before "# files" -- landing it AFTER the blank line and
+      // sandwiching that blank between "bar/" and "baz/", two patterns of
+      // the same group. It must land at index 2 instead (right after
+      // "bar/", before the blank).
+      const violations = violationsFor(
+        "# folders\nbar/\n\n# files\nfoo\nbaz/\n",
+      );
+      expect(violations).toHaveLength(1);
+      const violation = violations[0]!;
+      expect(violation.node.pattern).toBe("baz/");
+      expect(violation.targetGroup).toBe("folders");
+      expect(violation.fix).toMatchObject({
+        kind: "move",
+        insertBeforeIndex: 2,
+      });
+    });
+
+    it("skips a run of multiple trailing blank lines, not just one", () => {
+      const violations = violationsFor(
+        "# folders\nbar/\n\n\n# files\nfoo\nbaz/\n",
+      );
+      const violation = violations.find((v) => v.node.pattern === "baz/")!;
+      // Body: 0 heading, 1 "bar/", 2 BlankLine, 3 BlankLine, 4 "# files",
+      // 5 "foo", 6 "baz/" -- both blanks must be skipped, landing at 2.
+      expect(violation.fix).toMatchObject({
+        kind: "move",
+        insertBeforeIndex: 2,
+      });
+    });
+
+    it("skips trailing blank lines at EOF too, when no destination heading exists yet", () => {
+      // No headings at all: both patterns fall back to the EOF insertion
+      // point. With a trailing blank line already in the file, that
+      // fallback must land before it (index 2), not after it (index 3),
+      // for the same reason as the existing-section case above.
+      const violations = violationsFor("foo\nbaz/\n\n");
+      const moves = violations.filter((v) => v.kind === "wrongGroup");
+      expect(moves).toHaveLength(2);
+      for (const violation of moves) {
+        expect(violation.fix).toMatchObject({
+          kind: "move",
+          insertBeforeIndex: 2,
+        });
+      }
+    });
+  });
+
   describe("clustering", () => {
     it("glues a negation to its nearest matching-anchor preceding pattern and moves it silently with no independent violation", () => {
       const violations = violationsFor(

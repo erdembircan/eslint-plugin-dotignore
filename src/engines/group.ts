@@ -190,6 +190,30 @@ function firstSectionOf(
 }
 
 /**
+ * Walks `endIndex` backward over any run of trailing `BlankLine` nodes,
+ * stopping at the first non-blank node or at `lowerBound` (exclusive),
+ * whichever comes first.
+ *
+ * A destination section's `endIndex` may be preceded by a blank line that
+ * legitimately separates it from the next section (or, with no next
+ * section, from EOF). A moved pattern must land right after the section's
+ * last real content, not after that separator -- otherwise the separator
+ * ends up sandwiched between two patterns of the same group instead of
+ * marking a section boundary.
+ */
+function skipTrailingBlankLines(
+  body: readonly GitignoreNode[],
+  endIndex: number,
+  lowerBound: number,
+): number {
+  let index = endIndex;
+  while (index - 1 > lowerBound && body[index - 1]?.type === "BlankLine") {
+    index -= 1;
+  }
+  return index;
+}
+
+/**
  * Computes group-organization violations for a gitignore file's body.
  *
  * See the module-level design notes in the rule that consumes this
@@ -285,8 +309,12 @@ export function computeGroupViolations(
 
       const targetSection = firstSectionOf(sections, targetGroup);
       const insertBeforeIndex = targetSection
-        ? targetSection.endIndex
-        : body.length;
+        ? skipTrailingBlankLines(
+            body,
+            targetSection.endIndex,
+            targetSection.headingIndex,
+          )
+        : skipTrailingBlankLines(body, body.length, -1);
       const cluster = clusterByAnchorIndex.get(entry.bodyIndex);
       const clusterNodes = cluster
         ? cluster.members.map((m) => m.node)
