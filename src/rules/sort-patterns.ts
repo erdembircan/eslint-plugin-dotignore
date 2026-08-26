@@ -7,6 +7,7 @@ import {
 import type { SortOptions } from "../engines/sort.js";
 import type { GitignoreFile, Pattern } from "../parser/index.js";
 import type { GitignoreRuleDefinition } from "./types.js";
+import { detectLineTerminator } from "./utils.js";
 
 type MessageIds = "unsorted";
 
@@ -49,6 +50,7 @@ const rule: GitignoreRuleDefinition<[SortOptions], MessageIds> = {
   },
   create(context) {
     const options = context.options[0];
+    const sourceCode = context.sourceCode;
 
     function checkRun(run: readonly Pattern[]): void {
       if (run.length < 2) {
@@ -76,8 +78,10 @@ const rule: GitignoreRuleDefinition<[SortOptions], MessageIds> = {
 
       const sorted = sortRun(run, options);
       const rangeStart = run[0]!.range[0];
-      const rangeEnd = run[run.length - 1]!.range[1];
-      const newText = sorted.map((p) => p.raw).join("\n");
+      const lastNode = run[run.length - 1]!;
+      const rangeEnd = lastNode.range[1];
+      const eol = detectLineTerminator(sourceCode, lastNode);
+      const newText = sorted.map((p) => p.raw).join(eol);
 
       context.report({
         node: run[violatingIndex]!,

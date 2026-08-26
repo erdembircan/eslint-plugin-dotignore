@@ -46,3 +46,50 @@ export function endOfLineIncludingTerminator(
   const next = body[index + 1];
   return next ? next.range[0] : textLength;
 }
+
+/**
+ * Determines which line terminator a fixer should emit when it generates new
+ * line-joining text (a reordered run, a moved cluster, an inserted heading),
+ * so a fix on a CRLF (or mixed-EOL) file doesn't quietly rewrite the touched
+ * region to LF.
+ *
+ * Resolution order:
+ * 1. The terminator ending `referenceNode`'s own line, if it has one (i.e.
+ *    the line immediately adjacent to the edit) -- this is what makes a fix
+ *    follow local convention in a mixed-EOL file rather than a global one.
+ * 2. Otherwise, the file's first line terminator, if any exist at all.
+ * 3. Otherwise (no terminators anywhere in the file), `"\n"`.
+ */
+export function detectLineTerminator(
+  sourceCode: GitignoreSourceCode,
+  referenceNode?: { range: readonly [number, number] },
+): "\r\n" | "\n" {
+  const text = sourceCode.text;
+
+  // Node ranges exclude their trailing terminator entirely (a "\r" right
+  // before a "\n" is stripped from `raw` by the parser), so the terminator
+  // itself always starts exactly at a node's `range[1]` when one follows.
+  function terminatorStartingAt(index: number): "\r\n" | "\n" | undefined {
+    if (text.charAt(index) === "\r" && text.charAt(index + 1) === "\n") {
+      return "\r\n";
+    }
+    if (text.charAt(index) === "\n") {
+      return "\n";
+    }
+    return undefined;
+  }
+
+  if (referenceNode) {
+    const found = terminatorStartingAt(referenceNode.range[1]);
+    if (found) {
+      return found;
+    }
+  }
+
+  const firstNewline = text.indexOf("\n");
+  if (firstNewline !== -1) {
+    return text.charAt(firstNewline - 1) === "\r" ? "\r\n" : "\n";
+  }
+
+  return "\n";
+}

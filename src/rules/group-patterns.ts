@@ -6,7 +6,7 @@ import type {
 } from "../engines/group.js";
 import type { GitignoreFile } from "../parser/index.js";
 import type { GitignoreRuleDefinition } from "./types.js";
-import { endOfLineIncludingTerminator } from "./utils.js";
+import { detectLineTerminator, endOfLineIncludingTerminator } from "./utils.js";
 
 type Options = [GroupOptions];
 type MessageIds = "wrongGroup" | "missingHeading";
@@ -109,17 +109,25 @@ const rule: GitignoreRuleDefinition<Options, MessageIds> = {
                         fixer.removeRange(range),
                       );
 
+                      const insertBeforeNode =
+                        moveEdit.insertBeforeIndex < body.length
+                          ? body[moveEdit.insertBeforeIndex]!
+                          : body[body.length - 1]!;
                       const insertionPoint =
                         moveEdit.insertBeforeIndex < body.length
-                          ? body[moveEdit.insertBeforeIndex]!.range[0]
+                          ? insertBeforeNode.range[0]
                           : textLength;
+                      const eol = detectLineTerminator(
+                        sourceCode,
+                        insertBeforeNode,
+                      );
                       const needsLeadingNewline =
                         insertionPoint > 0 &&
                         sourceCode.text.charAt(insertionPoint - 1) !== "\n";
                       const clusterText = moveEdit.cluster
                         .map((p) => p.raw)
-                        .join("\n");
-                      const insertText = `${needsLeadingNewline ? "\n" : ""}${clusterText}\n`;
+                        .join(eol);
+                      const insertText = `${needsLeadingNewline ? eol : ""}${clusterText}${eol}`;
                       edits.push(
                         fixer.insertTextBeforeRange(
                           [insertionPoint, insertionPoint],
@@ -139,11 +147,13 @@ const rule: GitignoreRuleDefinition<Options, MessageIds> = {
               messageId: "missingHeading",
               data: { heading: insertEdit.heading },
               fix(fixer) {
-                const insertionPoint = body[insertEdit.beforeIndex]!.range[0];
-                const prefix = insertEdit.blankLineBefore ? "\n" : "";
+                const insertBeforeNode = body[insertEdit.beforeIndex]!;
+                const insertionPoint = insertBeforeNode.range[0];
+                const eol = detectLineTerminator(sourceCode, insertBeforeNode);
+                const prefix = insertEdit.blankLineBefore ? eol : "";
                 return fixer.insertTextBeforeRange(
                   [insertionPoint, insertionPoint],
-                  `${prefix}${insertEdit.heading}\n`,
+                  `${prefix}${insertEdit.heading}${eol}`,
                 );
               },
             });
