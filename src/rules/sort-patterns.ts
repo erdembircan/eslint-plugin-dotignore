@@ -1,5 +1,9 @@
 import { analyze } from "../algebra/index.js";
-import { compareEffectiveText, sortRun, splitIntoRuns } from "../engines/sort.js";
+import {
+  compareEffectiveText,
+  sortRun,
+  splitIntoRuns,
+} from "../engines/sort.js";
 import type { SortOptions } from "../engines/sort.js";
 import type { GitignoreFile, Pattern } from "../parser/index.js";
 import type { GitignoreRuleDefinition } from "./types.js";
@@ -43,7 +47,13 @@ const rule: GitignoreRuleDefinition<[SortOptions], MessageIds> = {
 
       let violatingIndex = -1;
       for (let i = 1; i < run.length; i += 1) {
-        if (compareEffectiveText(effectiveTexts[i - 1]!, effectiveTexts[i]!, options) > 0) {
+        if (
+          compareEffectiveText(
+            effectiveTexts[i - 1]!,
+            effectiveTexts[i]!,
+            options,
+          ) > 0
+        ) {
           violatingIndex = i;
           break;
         }

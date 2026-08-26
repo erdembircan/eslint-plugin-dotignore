@@ -86,10 +86,16 @@ function compareNatural(a: string, b: string): number {
  * `localeCompare` — everything is code-point based, for full determinism
  * across platforms and locales.
  */
-export function compareEffectiveText(a: string, b: string, options: SortOptions): number {
+export function compareEffectiveText(
+  a: string,
+  b: string,
+  options: SortOptions,
+): number {
   const aKey = options.caseSensitive ? a : a.toLowerCase();
   const bKey = options.caseSensitive ? b : b.toLowerCase();
-  const primary = options.natural ? compareNatural(aKey, bKey) : compareCodePoints(aKey, bKey);
+  const primary = options.natural
+    ? compareNatural(aKey, bKey)
+    : compareCodePoints(aKey, bKey);
   const directed = options.direction === "desc" ? -primary : primary;
   if (directed !== 0) {
     return directed;
@@ -111,7 +117,10 @@ export function compareEffectiveText(a: string, b: string, options: SortOptions)
  * change), otherwise the full block's node array in its new order (same
  * length and same set of nodes as `patterns`, only reordered).
  */
-export function sortBlock(patterns: readonly Pattern[], options: SortOptions): Pattern[] | null {
+export function sortBlock(
+  patterns: readonly Pattern[],
+  options: SortOptions,
+): Pattern[] | null {
   const result: Pattern[] = [...patterns];
   let changed = false;
   let runStart = 0;
@@ -165,8 +174,15 @@ export function splitIntoRuns(patterns: readonly Pattern[]): Pattern[][] {
 }
 
 /** Sorts one run (already free of negated barriers) per `options`. */
-export function sortRun(run: readonly Pattern[], options: SortOptions): Pattern[] {
+export function sortRun(
+  run: readonly Pattern[],
+  options: SortOptions,
+): Pattern[] {
   return [...run].sort((a, b) =>
-    compareEffectiveText(analyze(a.pattern).effective, analyze(b.pattern).effective, options),
+    compareEffectiveText(
+      analyze(a.pattern).effective,
+      analyze(b.pattern).effective,
+      options,
+    ),
   );
 }

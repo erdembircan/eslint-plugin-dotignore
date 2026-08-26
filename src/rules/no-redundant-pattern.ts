@@ -37,7 +37,11 @@ const rule: GitignoreRuleDefinition<[], MessageIds> = {
         const entries: PatternEntry[] = [];
         body.forEach((node, bodyIndex) => {
           if (node.type === "Pattern") {
-            entries.push({ node, bodyIndex, analysis: analyze(node.pattern, { negated: node.negated }) });
+            entries.push({
+              node,
+              bodyIndex,
+              analysis: analyze(node.pattern, { negated: node.negated }),
+            });
           }
         });
 
@@ -92,7 +96,11 @@ const rule: GitignoreRuleDefinition<[], MessageIds> = {
             }
 
             const deleteStart = later.node.range[0];
-            const deleteEnd = endOfLineIncludingTerminator(body, later.bodyIndex, textLength);
+            const deleteEnd = endOfLineIncludingTerminator(
+              body,
+              later.bodyIndex,
+              textLength,
+            );
 
             context.report({
               node: later.node,

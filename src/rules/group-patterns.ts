@@ -1,5 +1,9 @@
 import { computeGroupViolations } from "../engines/group.js";
-import type { GroupOptions, InsertHeadingEdit, MoveEdit } from "../engines/group.js";
+import type {
+  GroupOptions,
+  InsertHeadingEdit,
+  MoveEdit,
+} from "../engines/group.js";
 import type { GitignoreFile } from "../parser/index.js";
 import type { GitignoreRuleDefinition } from "./types.js";
 import { endOfLineIncludingTerminator } from "./utils.js";
@@ -28,9 +32,16 @@ const rule: GitignoreRuleDefinition<Options, MessageIds> = {
         additionalProperties: false,
       },
     ],
-    defaultOptions: [{ folderHeading: "# folders", fileHeading: "# files", order: ["folders", "files"] }],
+    defaultOptions: [
+      {
+        folderHeading: "# folders",
+        fileHeading: "# files",
+        order: ["folders", "files"],
+      },
+    ],
     docs: {
-      description: "group directory-only patterns and file patterns under configurable headings",
+      description:
+        "group directory-only patterns and file patterns under configurable headings",
       url: "https://github.com/erdembircan/eslint-plugin-dotignore/blob/main/docs/rules/group-patterns.md",
       recommended: false,
     },
@@ -55,14 +66,26 @@ const rule: GitignoreRuleDefinition<Options, MessageIds> = {
             context.report({
               node: violation.node,
               messageId: "wrongGroup",
-              data: { pattern: violation.node.pattern, group: violation.targetGroup },
+              data: {
+                pattern: violation.node.pattern,
+                group: violation.targetGroup,
+              },
               ...(moveEdit
                 ? {
                     fix(fixer) {
-                      const ranges = moveEdit.cluster.map((member): [number, number] => {
-                        const bodyIndex = body.indexOf(member);
-                        return [member.range[0], endOfLineIncludingTerminator(body, bodyIndex, textLength)];
-                      });
+                      const ranges = moveEdit.cluster.map(
+                        (member): [number, number] => {
+                          const bodyIndex = body.indexOf(member);
+                          return [
+                            member.range[0],
+                            endOfLineIncludingTerminator(
+                              body,
+                              bodyIndex,
+                              textLength,
+                            ),
+                          ];
+                        },
+                      );
 
                       const merged: Array<[number, number]> = [];
                       for (const range of ranges) {
@@ -74,17 +97,27 @@ const rule: GitignoreRuleDefinition<Options, MessageIds> = {
                         }
                       }
 
-                      const edits = merged.map((range) => fixer.removeRange(range));
+                      const edits = merged.map((range) =>
+                        fixer.removeRange(range),
+                      );
 
                       const insertionPoint =
                         moveEdit.insertBeforeIndex < body.length
                           ? body[moveEdit.insertBeforeIndex]!.range[0]
                           : textLength;
                       const needsLeadingNewline =
-                        insertionPoint > 0 && sourceCode.text.charAt(insertionPoint - 1) !== "\n";
-                      const clusterText = moveEdit.cluster.map((p) => p.raw).join("\n");
+                        insertionPoint > 0 &&
+                        sourceCode.text.charAt(insertionPoint - 1) !== "\n";
+                      const clusterText = moveEdit.cluster
+                        .map((p) => p.raw)
+                        .join("\n");
                       const insertText = `${needsLeadingNewline ? "\n" : ""}${clusterText}\n`;
-                      edits.push(fixer.insertTextBeforeRange([insertionPoint, insertionPoint], insertText));
+                      edits.push(
+                        fixer.insertTextBeforeRange(
+                          [insertionPoint, insertionPoint],
+                          insertText,
+                        ),
+                      );
 
                       return edits;
                     },

@@ -24,7 +24,10 @@ function countPrecedingBackslashes(text: string, index: number): number {
 /** Index of the last unescaped '/' in `text`, or -1 if there is none. */
 function lastUnescapedSlashIndex(text: string): number {
   for (let i = text.length - 1; i >= 0; i -= 1) {
-    if (text.charAt(i) === "/" && countPrecedingBackslashes(text, i) % 2 === 0) {
+    if (
+      text.charAt(i) === "/" &&
+      countPrecedingBackslashes(text, i) % 2 === 0
+    ) {
       return i;
     }
   }
@@ -63,12 +66,16 @@ function qualifiesForParentCheck(analysis: Analysis): boolean {
   if (!lastSegment || lastSegment.kind === "globstar") {
     return false;
   }
-  const effectiveLength = analysis.anchored ? segments.length : segments.length + 1;
+  const effectiveLength = analysis.anchored
+    ? segments.length
+    : segments.length + 1;
   return effectiveLength >= 2;
 }
 
 function buildReplacement(effectiveText: string): string {
-  return effectiveText.endsWith("/") ? `${effectiveText}*` : `${effectiveText}/*`;
+  return effectiveText.endsWith("/")
+    ? `${effectiveText}*`
+    : `${effectiveText}/*`;
 }
 
 const rule: GitignoreRuleDefinition<[], MessageIds> = {
@@ -84,7 +91,8 @@ const rule: GitignoreRuleDefinition<[], MessageIds> = {
     messages: {
       unreachable:
         "Unreachable negation — '{{parent}}' excludes the whole directory, so Git never re-checks files inside it.",
-      excludeContents: "Exclude the directory's contents with '{{replacement}}' so negations can apply.",
+      excludeContents:
+        "Exclude the directory's contents with '{{replacement}}' so negations can apply.",
     },
   },
   create(context) {
@@ -95,7 +103,11 @@ const rule: GitignoreRuleDefinition<[], MessageIds> = {
         const entries: PatternEntry[] = [];
         body.forEach((node, bodyIndex) => {
           if (node.type === "Pattern") {
-            entries.push({ node, bodyIndex, analysis: analyze(node.pattern, { negated: node.negated }) });
+            entries.push({
+              node,
+              bodyIndex,
+              analysis: analyze(node.pattern, { negated: node.negated }),
+            });
           }
         });
 
@@ -107,7 +119,9 @@ const rule: GitignoreRuleDefinition<[], MessageIds> = {
 
           // analyze() never throws (unlike subsumes(), guarded below), so
           // no try/catch is needed around this call.
-          const parentAnalysis = analyze(parentPatternText(later.analysis.effective));
+          const parentAnalysis = analyze(
+            parentPatternText(later.analysis.effective),
+          );
 
           for (let earlierIdx = 0; earlierIdx < laterIdx; earlierIdx += 1) {
             const earlier = entries[earlierIdx]!;

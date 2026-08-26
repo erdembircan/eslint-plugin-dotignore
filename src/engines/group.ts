@@ -144,7 +144,10 @@ interface Section {
   endIndex: number;
 }
 
-function computeSections(body: readonly GitignoreNode[], options: GroupOptions): Section[] {
+function computeSections(
+  body: readonly GitignoreNode[],
+  options: GroupOptions,
+): Section[] {
   const headingIndices: Array<{ index: number; group: GroupName }> = [];
   body.forEach((node, index) => {
     if (node.type !== "Comment") {
@@ -160,15 +163,29 @@ function computeSections(body: readonly GitignoreNode[], options: GroupOptions):
 
   return headingIndices.map(({ index, group }, i) => {
     const next = headingIndices[i + 1];
-    return { group, headingIndex: index, endIndex: next ? next.index : body.length };
+    return {
+      group,
+      headingIndex: index,
+      endIndex: next ? next.index : body.length,
+    };
   });
 }
 
-function sectionContaining(sections: readonly Section[], bodyIndex: number, group: GroupName): Section | undefined {
-  return sections.find((s) => s.group === group && bodyIndex > s.headingIndex && bodyIndex < s.endIndex);
+function sectionContaining(
+  sections: readonly Section[],
+  bodyIndex: number,
+  group: GroupName,
+): Section | undefined {
+  return sections.find(
+    (s) =>
+      s.group === group && bodyIndex > s.headingIndex && bodyIndex < s.endIndex,
+  );
 }
 
-function firstSectionOf(sections: readonly Section[], group: GroupName): Section | undefined {
+function firstSectionOf(
+  sections: readonly Section[],
+  group: GroupName,
+): Section | undefined {
   return sections.find((s) => s.group === group);
 }
 
@@ -184,7 +201,10 @@ function firstSectionOf(sections: readonly Section[], group: GroupName): Section
  * destination (the companion `missingHeading` violation is what actually
  * introduces the heading).
  */
-export function computeGroupViolations(body: readonly GitignoreNode[], options: GroupOptions): GroupViolation[] {
+export function computeGroupViolations(
+  body: readonly GitignoreNode[],
+  options: GroupOptions,
+): GroupViolation[] {
   const patterns: IndexedNode<Pattern>[] = [];
   body.forEach((node, bodyIndex) => {
     if (node.type === "Pattern") {
@@ -211,7 +231,9 @@ export function computeGroupViolations(body: readonly GitignoreNode[], options: 
     }
     // "order" only decides the sequence in which BOTH newly-needed
     // headings are reported/inserted.
-    const orderedMissing = options.order.filter((g) => missingHeadingGroups.includes(g));
+    const orderedMissing = options.order.filter((g) =>
+      missingHeadingGroups.includes(g),
+    );
 
     for (const group of orderedMissing) {
       // hasFolders && hasFiles (checked above) guarantees a pattern of
@@ -226,7 +248,8 @@ export function computeGroupViolations(body: readonly GitignoreNode[], options: 
         targetGroup: group,
         fix: {
           kind: "insertHeading",
-          heading: group === "folders" ? options.folderHeading : options.fileHeading,
+          heading:
+            group === "folders" ? options.folderHeading : options.fileHeading,
           beforeIndex: first.bodyIndex,
           blankLineBefore: !isFileStart && !alreadyBlankPreceded,
         },
@@ -246,7 +269,9 @@ export function computeGroupViolations(body: readonly GitignoreNode[], options: 
       }
 
       const targetGroup = groupOf(entry.node);
-      const inCorrectSection = Boolean(sectionContaining(sections, entry.bodyIndex, targetGroup));
+      const inCorrectSection = Boolean(
+        sectionContaining(sections, entry.bodyIndex, targetGroup),
+      );
       if (inCorrectSection) {
         continue;
       }
@@ -259,9 +284,13 @@ export function computeGroupViolations(body: readonly GitignoreNode[], options: 
       }
 
       const targetSection = firstSectionOf(sections, targetGroup);
-      const insertBeforeIndex = targetSection ? targetSection.endIndex : body.length;
+      const insertBeforeIndex = targetSection
+        ? targetSection.endIndex
+        : body.length;
       const cluster = clusterByAnchorIndex.get(entry.bodyIndex);
-      const clusterNodes = cluster ? cluster.members.map((m) => m.node) : [entry.node];
+      const clusterNodes = cluster
+        ? cluster.members.map((m) => m.node)
+        : [entry.node];
 
       violations.push({
         kind: "wrongGroup",

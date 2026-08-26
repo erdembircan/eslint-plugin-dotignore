@@ -1,6 +1,12 @@
 import { dirname, join } from "node:path";
 import { analyze, subsumes } from "../algebra/index.js";
-import type { Analysis, Segment, SegmentTokens, Token, TokenLit } from "../algebra/index.js";
+import type {
+  Analysis,
+  Segment,
+  SegmentTokens,
+  Token,
+  TokenLit,
+} from "../algebra/index.js";
 import type { Pattern } from "../parser/index.js";
 import type { FsHost } from "./fs-host.js";
 import type { GitignoreRuleDefinition } from "./types.js";
@@ -67,7 +73,11 @@ function segmentMatchesEntryName(segment: Segment, name: string): boolean {
  * @returns true iff at least one path matched all segments and every match
  * is a directory (zero files, zero symlinks among the matches).
  */
-function walkMatchesOnlyDirectories(host: FsHost, baseDir: string, segments: readonly SegmentTokens[]): boolean {
+function walkMatchesOnlyDirectories(
+  host: FsHost,
+  baseDir: string,
+  segments: readonly SegmentTokens[],
+): boolean {
   let candidates: string[] = [baseDir];
   let visited = 0;
 
@@ -105,19 +115,23 @@ function walkMatchesOnlyDirectories(host: FsHost, baseDir: string, segments: rea
  * Split out from the registry rule so tests can pass an in-memory fake
  * instead of touching the real filesystem.
  */
-export function createRequireDirSlashRule(host: FsHost): GitignoreRuleDefinition<[], MessageIds> {
+export function createRequireDirSlashRule(
+  host: FsHost,
+): GitignoreRuleDefinition<[], MessageIds> {
   return {
     meta: {
       type: "suggestion",
       fixable: "code",
       schema: [],
       docs: {
-        description: "require a trailing slash on patterns that match existing directories",
+        description:
+          "require a trailing slash on patterns that match existing directories",
         url: "https://github.com/erdembircan/eslint-plugin-dotignore/blob/main/docs/rules/require-dir-slash.md",
         recommended: false,
       },
       messages: {
-        missingSlash: "'{{pattern}}' matches an existing directory — add a trailing '/' to make that explicit.",
+        missingSlash:
+          "'{{pattern}}' matches an existing directory — add a trailing '/' to make that explicit.",
       },
     },
     create(context) {
@@ -149,10 +163,17 @@ export function createRequireDirSlashRule(host: FsHost): GitignoreRuleDefinition
             // notionally matches at any depth), only the single candidate
             // directly under the file's own directory is checked -- no
             // deep search across the whole tree.
-            const candidate = join(baseDir, ...tokenSegments.map(segmentLiteralText));
+            const candidate = join(
+              baseDir,
+              ...tokenSegments.map(segmentLiteralText),
+            );
             isDirectory = host.kind(candidate) === "dir";
           } else {
-            isDirectory = walkMatchesOnlyDirectories(host, baseDir, tokenSegments);
+            isDirectory = walkMatchesOnlyDirectories(
+              host,
+              baseDir,
+              tokenSegments,
+            );
           }
 
           if (!isDirectory) {
