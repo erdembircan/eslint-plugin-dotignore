@@ -35,3 +35,16 @@ plugin.configs = buildConfigs(plugin);
 
 export default plugin;
 export { gitignoreLanguage, rules };
+// Named alongside `rules`/`gitignoreLanguage` above for the same reason:
+// consumers who want a specific piece without pulling in the whole default
+// export. Also happens to be load-bearing for eslint-doc-generator, whose
+// plugin loader only unwraps a required ESM module's `default` export when
+// the module has *nothing but* `default` (exactly `{ __esModule, default }`,
+// the shape a Babel/tsc CJS transpilation produces) -- our module also
+// named-exports `gitignoreLanguage` and `rules`, which disqualifies that
+// unwrap under Node's *native* ESM-via-`require()` interop, so the
+// generator ends up reading the raw module-namespace object instead of
+// `plugin`. `rules` happening to be named-exported already made rule
+// descriptions resolve by coincidence; `configs` needs the same treatment
+// so config-membership notices resolve too.
+export const configs = plugin.configs;

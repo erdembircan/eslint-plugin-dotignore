@@ -51,26 +51,30 @@ export default [
 
 <!-- begin auto-generated rules list -->
 
+💼 Configurations enabled in.\
+⚠️ Configurations set to warn in.\
+✅ Set in the `recommended` configuration.\
+🔒 Set in the `strict` configuration.\
 🔧 Automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/user-guide/command-line-interface#--fix).\
 💡 Manually fixable by [editor suggestions](https://eslint.org/docs/latest/use/core-concepts#rule-suggestions).
 
-| Name                                                                     | Description                                                                 | 🔧  | 💡  |
-| :----------------------------------------------------------------------- | :-------------------------------------------------------------------------- | :-- | :-- |
-| [comment-spacing](docs/rules/comment-spacing.md)                         | enforce consistent spacing after '#' in comments                            | 🔧  |     |
-| [group-patterns](docs/rules/group-patterns.md)                           | group directory-only patterns and file patterns under configurable headings | 🔧  |     |
-| [leading-slash-style](docs/rules/leading-slash-style.md)                 | enforce a consistent leading-slash style for anchored patterns              | 🔧  |     |
-| [max-consecutive-blank-lines](docs/rules/max-consecutive-blank-lines.md) | limit consecutive blank lines                                               | 🔧  |     |
-| [no-backslash-path](docs/rules/no-backslash-path.md)                     | disallow backslash as a path separator                                      |     | 💡  |
-| [no-duplicate-pattern](docs/rules/no-duplicate-pattern.md)               | disallow duplicate and equivalent patterns                                  | 🔧  |     |
-| [no-empty-group](docs/rules/no-empty-group.md)                           | disallow group headings with no patterns under it                           | 🔧  |     |
-| [no-empty-path-segment](docs/rules/no-empty-path-segment.md)             | disallow empty path segments                                                |     | 💡  |
-| [no-invalid-syntax](docs/rules/no-invalid-syntax.md)                     | disallow patterns that violate the gitignore specification                  |     |     |
-| [no-misplaced-globstar](docs/rules/no-misplaced-globstar.md)             | disallow '**' in positions where it loses its special meaning               | 🔧  |     |
-| [no-redundant-pattern](docs/rules/no-redundant-pattern.md)               | disallow patterns already covered by an earlier pattern                     | 🔧  |     |
-| [no-trailing-whitespace](docs/rules/no-trailing-whitespace.md)           | disallow unescaped trailing whitespace                                      | 🔧  |     |
-| [no-unreachable-negation](docs/rules/no-unreachable-negation.md)         | disallow negations that Git can never apply                                 |     | 💡  |
-| [require-dir-slash](docs/rules/require-dir-slash.md)                     | require a trailing slash on patterns that match existing directories        | 🔧  |     |
-| [sort-patterns](docs/rules/sort-patterns.md)                             | enforce alphabetical ordering of patterns                                   | 🔧  |     |
+| Name                                                                     | Description                                                                 | 💼    | ⚠️  | 🔧  | 💡  |
+| :----------------------------------------------------------------------- | :-------------------------------------------------------------------------- | :---- | :-- | :-- | :-- |
+| [comment-spacing](docs/rules/comment-spacing.md)                         | enforce consistent spacing after '#' in comments                            | 🔒    | ✅  | 🔧  |     |
+| [group-patterns](docs/rules/group-patterns.md)                           | group directory-only patterns and file patterns under configurable headings | 🔒    |     | 🔧  |     |
+| [leading-slash-style](docs/rules/leading-slash-style.md)                 | enforce a consistent leading-slash style for anchored patterns              | 🔒    | ✅  | 🔧  |     |
+| [max-consecutive-blank-lines](docs/rules/max-consecutive-blank-lines.md) | limit consecutive blank lines                                               | 🔒    | ✅  | 🔧  |     |
+| [no-backslash-path](docs/rules/no-backslash-path.md)                     | disallow backslash as a path separator                                      | ✅ 🔒 |     |     | 💡  |
+| [no-duplicate-pattern](docs/rules/no-duplicate-pattern.md)               | disallow duplicate and equivalent patterns                                  | ✅ 🔒 |     | 🔧  |     |
+| [no-empty-group](docs/rules/no-empty-group.md)                           | disallow group headings with no patterns under it                           | 🔒    | ✅  | 🔧  |     |
+| [no-empty-path-segment](docs/rules/no-empty-path-segment.md)             | disallow empty path segments                                                | ✅ 🔒 |     |     | 💡  |
+| [no-invalid-syntax](docs/rules/no-invalid-syntax.md)                     | disallow patterns that violate the gitignore specification                  | ✅ 🔒 |     |     |     |
+| [no-misplaced-globstar](docs/rules/no-misplaced-globstar.md)             | disallow '**' in positions where it loses its special meaning               | ✅ 🔒 |     | 🔧  |     |
+| [no-redundant-pattern](docs/rules/no-redundant-pattern.md)               | disallow patterns already covered by an earlier pattern                     | ✅ 🔒 |     | 🔧  |     |
+| [no-trailing-whitespace](docs/rules/no-trailing-whitespace.md)           | disallow unescaped trailing whitespace                                      | 🔒    | ✅  | 🔧  |     |
+| [no-unreachable-negation](docs/rules/no-unreachable-negation.md)         | disallow negations that Git can never apply                                 | ✅ 🔒 |     |     | 💡  |
+| [require-dir-slash](docs/rules/require-dir-slash.md)                     | require a trailing slash on patterns that match existing directories        | 🔒    |     | 🔧  |     |
+| [sort-patterns](docs/rules/sort-patterns.md)                             | enforce alphabetical ordering of patterns                                   | 🔒    |     | 🔧  |     |
 
 <!-- end auto-generated rules list -->
 

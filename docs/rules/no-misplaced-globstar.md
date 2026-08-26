@@ -2,6 +2,8 @@
 
 📝 Disallow '**' in positions where it loses its special meaning.
 
+💼 This rule is enabled in the following configs: ✅ `recommended`, 🔒 `strict`.
+
 🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).
 
 <!-- end auto-generated rule header -->
