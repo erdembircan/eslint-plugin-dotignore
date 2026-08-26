@@ -33,6 +33,7 @@ Use the following format for all commit messages:
 ```
 
 ## **IMPORTANT**
+
 **DO NOT INCLUDE AI TOOL CREDITS OR CO-AUTHORSHIP ATTRIBUTION IN COMMIT MESSAGES**
 
 ## Guidelines

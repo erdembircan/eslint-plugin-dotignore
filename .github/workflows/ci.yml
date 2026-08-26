@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22, latest]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.16.1
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm format
+      - run: pnpm typecheck
+      - run: pnpm build
+      - run: pnpm test:coverage
+
+  license:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.16.1
+
+      # license-wizard requires Node.js >= 22.13.0; kept as its own job
+      # (rather than gated inside the test matrix) since it's a single
+      # global check, not something that varies per Node version. Runs on
+      # Node 24 independent of the test matrix's own Node versions.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - name: Check the license is in sync
+        run: pnpm license:verify
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.16.1
+
+      # Docs generation is a single global check, not something that
+      # varies per Node version, so it gets its own job rather than
+      # running once per matrix leg.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - name: Check generated docs are in sync
+        run: pnpm docs:check
