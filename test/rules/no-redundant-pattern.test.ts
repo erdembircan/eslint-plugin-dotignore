@@ -28,14 +28,18 @@ describe("no-redundant-pattern", () => {
         // Required cascade case: "a/*" matches "a/b" as a directory, so it
         // also covers everything under it, including "a/b/c".
         code: "a/*\na/b/c\n",
-        errors: [{ messageId: "redundant", data: { covering: "a/*", line: 1 } }],
+        errors: [
+          { messageId: "redundant", data: { covering: "a/*", line: 1 } },
+        ],
         output: "a/*\n",
       },
       {
         // A negation strictly AFTER j does not block the report --
         // last-match-wins means it overrides j regardless of j's removal.
         code: "a/*\na/b/c\n!a/b\n",
-        errors: [{ messageId: "redundant", data: { covering: "a/*", line: 1 } }],
+        errors: [
+          { messageId: "redundant", data: { covering: "a/*", line: 1 } },
+        ],
         output: "a/*\n!a/b\n",
       },
       {

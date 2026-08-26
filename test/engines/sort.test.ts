@@ -1,15 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { compareEffectiveText, sortBlock, sortRun, splitIntoRuns } from "../../src/engines/sort.js";
+import {
+  compareEffectiveText,
+  sortBlock,
+  sortRun,
+  splitIntoRuns,
+} from "../../src/engines/sort.js";
 import type { SortOptions } from "../../src/engines/sort.js";
 import { parse } from "../../src/parser/index.js";
 import type { Pattern } from "../../src/parser/index.js";
 
-const DEFAULT_OPTIONS: SortOptions = { direction: "asc", caseSensitive: false, natural: true };
+const DEFAULT_OPTIONS: SortOptions = {
+  direction: "asc",
+  caseSensitive: false,
+  natural: true,
+};
 
 /** Builds an array of real Pattern nodes (one per line) from gitignore
  * text, for use as a "block" input to sortBlock. */
 function patternsFrom(text: string): Pattern[] {
-  return parse(text).body.filter((node): node is Pattern => node.type === "Pattern");
+  return parse(text).body.filter(
+    (node): node is Pattern => node.type === "Pattern",
+  );
 }
 
 function effectiveTexts(patterns: readonly Pattern[]): string[] {
@@ -41,11 +52,14 @@ describe("compareEffectiveText", () => {
     ["apple", "Apple", { direction: "desc", caseSensitive: false }, 1],
   ];
 
-  it.each(cases)("compares %j vs %j with %j as %i", (a, b, partialOptions, expectedSign) => {
-    const options: SortOptions = { ...DEFAULT_OPTIONS, ...partialOptions };
-    const result = compareEffectiveText(a, b, options);
-    expect(Math.sign(result)).toBe(expectedSign);
-  });
+  it.each(cases)(
+    "compares %j vs %j with %j as %i",
+    (a, b, partialOptions, expectedSign) => {
+      const options: SortOptions = { ...DEFAULT_OPTIONS, ...partialOptions };
+      const result = compareEffectiveText(a, b, options);
+      expect(Math.sign(result)).toBe(expectedSign);
+    },
+  );
 
   it("is antisymmetric", () => {
     for (const [a, b] of [
@@ -79,7 +93,10 @@ describe("sortBlock", () => {
 
   it("sorts descending", () => {
     const patterns = patternsFrom("apple\nbanana\ncherry\n");
-    const sorted = sortBlock(patterns, { ...DEFAULT_OPTIONS, direction: "desc" });
+    const sorted = sortBlock(patterns, {
+      ...DEFAULT_OPTIONS,
+      direction: "desc",
+    });
     expect(sorted).not.toBeNull();
     expect(effectiveTexts(sorted!)).toEqual(["cherry", "banana", "apple"]);
   });
@@ -88,7 +105,13 @@ describe("sortBlock", () => {
     const patterns = patternsFrom("zebra\nfoo\n!bar\ncherry\napple\n");
     const sorted = sortBlock(patterns, DEFAULT_OPTIONS);
     expect(sorted).not.toBeNull();
-    expect(effectiveTexts(sorted!)).toEqual(["foo", "zebra", "bar", "apple", "cherry"]);
+    expect(effectiveTexts(sorted!)).toEqual([
+      "foo",
+      "zebra",
+      "bar",
+      "apple",
+      "cherry",
+    ]);
     // The barrier node itself is the exact same node instance, unmoved in
     // its slot.
     expect(sorted![2]).toBe(patterns[2]);
@@ -121,7 +144,11 @@ describe("splitIntoRuns", () => {
   it("returns one run for a block with no barriers", () => {
     const patterns = patternsFrom("a\nb\nc\n");
     expect(splitIntoRuns(patterns)).toHaveLength(1);
-    expect(effectiveTexts(splitIntoRuns(patterns)[0]!)).toEqual(["a", "b", "c"]);
+    expect(effectiveTexts(splitIntoRuns(patterns)[0]!)).toEqual([
+      "a",
+      "b",
+      "c",
+    ]);
   });
 
   it("splits on negated barriers, dropping the barriers themselves", () => {

@@ -33,14 +33,21 @@ describe("require-dir-slash", () => {
         {
           code: "node_modules",
           filename: FILENAME,
-          errors: [{ messageId: "missingSlash", data: { pattern: "node_modules" } }],
+          errors: [
+            { messageId: "missingSlash", data: { pattern: "node_modules" } },
+          ],
           output: "node_modules/",
         },
         {
           // Multi-segment literal path, still root-relative only.
           code: "node_modules/pkg",
           filename: FILENAME,
-          errors: [{ messageId: "missingSlash", data: { pattern: "node_modules/pkg" } }],
+          errors: [
+            {
+              messageId: "missingSlash",
+              data: { pattern: "node_modules/pkg" },
+            },
+          ],
           output: "node_modules/pkg/",
         },
       ],
@@ -62,7 +69,9 @@ describe("require-dir-slash", () => {
 
   ruleTester.run(
     "require-dir-slash (glob walk, single segment)",
-    createRequireDirSlashRule(fakeFsHost({ repo: { src: {}, lib: {}, "notes.txt": "file" } })),
+    createRequireDirSlashRule(
+      fakeFsHost({ repo: { src: {}, lib: {}, "notes.txt": "file" } }),
+    ),
     {
       valid: [
         // Mixed matches (a file among the directories): silent.
@@ -90,7 +99,9 @@ describe("require-dir-slash", () => {
 
   ruleTester.run(
     "require-dir-slash (glob walk, multi-segment)",
-    createRequireDirSlashRule(fakeFsHost({ repo: { src: { components: {}, utils: {} } } })),
+    createRequireDirSlashRule(
+      fakeFsHost({ repo: { src: { components: {}, utils: {} } } }),
+    ),
     {
       valid: [],
       invalid: [
@@ -119,7 +130,9 @@ describe("require-dir-slash", () => {
 
   ruleTester.run(
     "require-dir-slash (glob walk, a matched candidate is not a directory)",
-    createRequireDirSlashRule(fakeFsHost({ repo: { src: { "a.txt": "file", b: {} } } })),
+    createRequireDirSlashRule(
+      fakeFsHost({ repo: { src: { "a.txt": "file", b: {} } } }),
+    ),
     {
       valid: [
         // The '*' at the middle level matches both "a.txt" and "b"; since

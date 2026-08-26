@@ -21,7 +21,10 @@ function splitPath(path: string): string[] {
   return path.split(/[\\/]+/).filter((part) => part !== "" && part !== ".");
 }
 
-function resolve(tree: FakeFsTree, path: string): FakeFsTree | "file" | "symlink" | undefined {
+function resolve(
+  tree: FakeFsTree,
+  path: string,
+): FakeFsTree | "file" | "symlink" | undefined {
   let node: FakeFsTree | "file" | "symlink" = tree;
   for (const part of splitPath(path)) {
     if (typeof node !== "object") {

@@ -9,11 +9,16 @@ const DEFAULT_OPTIONS: GroupOptions = {
   order: ["folders", "files"],
 };
 
-function violationsFor(text: string, options: GroupOptions = DEFAULT_OPTIONS): GroupViolation[] {
+function violationsFor(
+  text: string,
+  options: GroupOptions = DEFAULT_OPTIONS,
+): GroupViolation[] {
   return computeGroupViolations(parse(text).body, options);
 }
 
-function summarize(violations: GroupViolation[]): Array<{ kind: string; pattern: string; group: string; fixed: boolean }> {
+function summarize(
+  violations: GroupViolation[],
+): Array<{ kind: string; pattern: string; group: string; fixed: boolean }> {
   return violations.map((v) => ({
     kind: v.kind,
     pattern: v.node.pattern,
@@ -35,28 +40,48 @@ describe("computeGroupViolations", () => {
     const violations = violationsFor("foo\nbar/\n");
     const missing = violations.filter((v) => v.kind === "missingHeading");
     expect(summarize(missing)).toEqual([
-      { kind: "missingHeading", pattern: "bar/", group: "folders", fixed: true },
+      {
+        kind: "missingHeading",
+        pattern: "bar/",
+        group: "folders",
+        fixed: true,
+      },
       { kind: "missingHeading", pattern: "foo", group: "files", fixed: true },
     ]);
   });
 
   it("respects the order option for which missing heading is reported first", () => {
-    const violations = violationsFor("foo\nbar/\n", { ...DEFAULT_OPTIONS, order: ["files", "folders"] });
+    const violations = violationsFor("foo\nbar/\n", {
+      ...DEFAULT_OPTIONS,
+      order: ["files", "folders"],
+    });
     const missing = violations.filter((v) => v.kind === "missingHeading");
     expect(missing.map((v) => v.targetGroup)).toEqual(["files", "folders"]);
   });
 
   it("sets blankLineBefore correctly: false at file start, true otherwise (unless already blank-preceded)", () => {
     const violations = violationsFor("foo\nbar/\n");
-    const filesViolation = violations.find((v) => v.kind === "missingHeading" && v.targetGroup === "files")!;
-    const foldersViolation = violations.find((v) => v.kind === "missingHeading" && v.targetGroup === "folders")!;
-    expect(filesViolation.fix).toMatchObject({ kind: "insertHeading", blankLineBefore: false });
-    expect(foldersViolation.fix).toMatchObject({ kind: "insertHeading", blankLineBefore: true });
+    const filesViolation = violations.find(
+      (v) => v.kind === "missingHeading" && v.targetGroup === "files",
+    )!;
+    const foldersViolation = violations.find(
+      (v) => v.kind === "missingHeading" && v.targetGroup === "folders",
+    )!;
+    expect(filesViolation.fix).toMatchObject({
+      kind: "insertHeading",
+      blankLineBefore: false,
+    });
+    expect(foldersViolation.fix).toMatchObject({
+      kind: "insertHeading",
+      blankLineBefore: true,
+    });
   });
 
   it("does not require a blank line before the heading when one already precedes it", () => {
     const violations = violationsFor("foo\n\nbar/\n");
-    const foldersViolation = violations.find((v) => v.kind === "missingHeading" && v.targetGroup === "folders")!;
+    const foldersViolation = violations.find(
+      (v) => v.kind === "missingHeading" && v.targetGroup === "folders",
+    )!;
     expect(foldersViolation.fix).toMatchObject({ blankLineBefore: false });
   });
 
@@ -80,42 +105,65 @@ describe("computeGroupViolations", () => {
       { kind: "wrongGroup", pattern: "bar/", group: "folders", fixed: true },
     ]);
     const fooViolation = violations.find((v) => v.node.pattern === "foo")!;
-    expect(fooViolation.fix).toMatchObject({ kind: "move", insertBeforeIndex: 4 });
+    expect(fooViolation.fix).toMatchObject({
+      kind: "move",
+      insertBeforeIndex: 4,
+    });
     const barViolation = violations.find((v) => v.node.pattern === "bar/")!;
-    expect(barViolation.fix).toMatchObject({ kind: "move", insertBeforeIndex: 2 });
+    expect(barViolation.fix).toMatchObject({
+      kind: "move",
+      insertBeforeIndex: 2,
+    });
   });
 
   describe("clustering", () => {
     it("glues a negation to its nearest matching-anchor preceding pattern and moves it silently with no independent violation", () => {
-      const violations = violationsFor("# folders\nbar/\n# files\nfoo\n!foo/x\n");
+      const violations = violationsFor(
+        "# folders\nbar/\n# files\nfoo\n!foo/x\n",
+      );
       expect(violations).toEqual([]);
     });
 
     it("moves a glued cluster (anchor + negation) as one atomic unit when the anchor is misplaced", () => {
-      const violations = violationsFor("# folders\nbaz/\nfoo\n!foo/x\n# files\n");
+      const violations = violationsFor(
+        "# folders\nbaz/\nfoo\n!foo/x\n# files\n",
+      );
       expect(violations).toHaveLength(1);
       const violation = violations[0]!;
       expect(violation.kind).toBe("wrongGroup");
       expect(violation.node.pattern).toBe("foo");
-      expect(violation.fix).toMatchObject({ kind: "move", insertBeforeIndex: 5 });
+      expect(violation.fix).toMatchObject({
+        kind: "move",
+        insertBeforeIndex: 5,
+      });
       if (violation.fix?.kind === "move") {
-        expect(violation.fix.cluster.map((p) => p.pattern)).toEqual(["foo", "foo/x"]);
+        expect(violation.fix.cluster.map((p) => p.pattern)).toEqual([
+          "foo",
+          "foo/x",
+        ]);
       }
     });
 
     it("normalizes anchors: leading '/' and leading '**/' both strip to the same first segment", () => {
-      const violations = violationsFor("# folders\nbaz/\n/foo\n!**/foo/x\n# files\n");
+      const violations = violationsFor(
+        "# folders\nbaz/\n/foo\n!**/foo/x\n# files\n",
+      );
       // "/foo" normalizes to first segment "foo"; "**/foo/x" also
       // normalizes (strip "**/") to first segment "foo" -- they glue.
       expect(violations).toHaveLength(1);
       const violation = violations[0]!;
       if (violation.fix?.kind === "move") {
-        expect(violation.fix.cluster.map((p) => p.pattern)).toEqual(["/foo", "**/foo/x"]);
+        expect(violation.fix.cluster.map((p) => p.pattern)).toEqual([
+          "/foo",
+          "**/foo/x",
+        ]);
       }
     });
 
     it("skips over an intervening negated pattern while searching backward for an anchor", () => {
-      const violations = violationsFor("# folders\nbaz/\nfoo\n!other\n!foo/x\n# files\n");
+      const violations = violationsFor(
+        "# folders\nbaz/\nfoo\n!other\n!foo/x\n# files\n",
+      );
       // "foo" is itself misplaced (inside the folders section) and gets
       // its own violation. "!other" has no anchor of its own (reported, no
       // fix). "!foo/x" must look past "!other" to find "foo" and glues to
@@ -126,12 +174,17 @@ describe("computeGroupViolations", () => {
       ]);
       const fooViolation = violations.find((v) => v.node.pattern === "foo")!;
       if (fooViolation.fix?.kind === "move") {
-        expect(fooViolation.fix.cluster.map((p) => p.pattern)).toEqual(["foo", "foo/x"]);
+        expect(fooViolation.fix.cluster.map((p) => p.pattern)).toEqual([
+          "foo",
+          "foo/x",
+        ]);
       }
     });
 
     it("compares anchors using the raw text's unescaped slash, skipping an escaped one first", () => {
-      const violations = violationsFor("# folders\nbaz/\na\\/b/x\n!a\\/b/c\n# files\n");
+      const violations = violationsFor(
+        "# folders\nbaz/\na\\/b/x\n!a\\/b/c\n# files\n",
+      );
       // The anchor itself is misplaced (inside the folders section), so it
       // gets one violation; the negation glues to it (escaped slash
       // correctly not treated as a segment separator) and moves silently.
@@ -139,17 +192,26 @@ describe("computeGroupViolations", () => {
       const violation = violations[0]!;
       expect(violation.node.pattern).toBe("a\\/b/x");
       if (violation.fix?.kind === "move") {
-        expect(violation.fix.cluster.map((p) => p.pattern)).toEqual(["a\\/b/x", "a\\/b/c"]);
+        expect(violation.fix.cluster.map((p) => p.pattern)).toEqual([
+          "a\\/b/x",
+          "a\\/b/c",
+        ]);
       }
     });
 
     it("glues multiple negations to the same anchor into one cluster", () => {
-      const violations = violationsFor("# folders\nbaz/\nfoo\n!foo/a\n!foo/b\n# files\n");
+      const violations = violationsFor(
+        "# folders\nbaz/\nfoo\n!foo/a\n!foo/b\n# files\n",
+      );
       expect(violations).toHaveLength(1);
       const violation = violations[0]!;
       expect(violation.node.pattern).toBe("foo");
       if (violation.fix?.kind === "move") {
-        expect(violation.fix.cluster.map((p) => p.pattern)).toEqual(["foo", "foo/a", "foo/b"]);
+        expect(violation.fix.cluster.map((p) => p.pattern)).toEqual([
+          "foo",
+          "foo/a",
+          "foo/b",
+        ]);
       }
     });
 

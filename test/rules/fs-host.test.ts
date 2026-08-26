@@ -77,7 +77,10 @@ describe("realFsHost", () => {
   describe("readdir", () => {
     it("returns the entry list for a readable directory", async () => {
       const fs = await import("node:fs");
-      vi.mocked(fs.readdirSync).mockReturnValue(["a", "b"] as unknown as ReturnType<typeof fs.readdirSync>);
+      vi.mocked(fs.readdirSync).mockReturnValue([
+        "a",
+        "b",
+      ] as unknown as ReturnType<typeof fs.readdirSync>);
 
       const { realFsHost } = await import("../../src/rules/fs-host.js");
       expect(realFsHost.readdir("/some/dir")).toEqual(["a", "b"]);

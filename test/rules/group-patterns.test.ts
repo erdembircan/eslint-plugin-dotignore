@@ -26,7 +26,10 @@ describe("group-patterns", () => {
         code: "# files\nfoo\nbar/\n",
         errors: [
           { messageId: "missingHeading", data: { heading: "# folders" } },
-          { messageId: "wrongGroup", data: { pattern: "bar/", group: "folders" } },
+          {
+            messageId: "wrongGroup",
+            data: { pattern: "bar/", group: "folders" },
+          },
         ],
         output: "# files\nfoo\n\n# folders\nbar/\n",
       },
@@ -37,7 +40,10 @@ describe("group-patterns", () => {
         code: "# folders\nfoo\n# files\nbar/\n",
         errors: [
           { messageId: "wrongGroup", data: { pattern: "foo", group: "files" } },
-          { messageId: "wrongGroup", data: { pattern: "bar/", group: "folders" } },
+          {
+            messageId: "wrongGroup",
+            data: { pattern: "bar/", group: "folders" },
+          },
         ],
         output: "# folders\n# files\nbar/\nfoo\n",
       },
@@ -46,15 +52,38 @@ describe("group-patterns", () => {
         // one cluster and is never independently reported. This one
         // converges fully in a single pass.
         code: "# folders\nbaz/\nfoo\n!foo/x\n# files\n",
-        errors: [{ messageId: "wrongGroup", data: { pattern: "foo", group: "files" } }],
+        errors: [
+          { messageId: "wrongGroup", data: { pattern: "foo", group: "files" } },
+        ],
         output: "# folders\nbaz/\n# files\nfoo\n!foo/x\n",
+      },
+      {
+        // No trailing newline on the last line, and no organizational
+        // structure at all (so both missingHeading and wrongGroup fire for
+        // both patterns, same as the plain "foo\nbar/\n" case). What this
+        // case specifically exercises: moving "bar/" to the EOF fallback
+        // destination must prepend its own newline rather than gluing
+        // onto the previous line, since the file doesn't already end in one.
+        code: "foo\nbar/",
+        errors: [
+          { messageId: "missingHeading", data: { heading: "# files" } },
+          { messageId: "wrongGroup", data: { pattern: "foo", group: "files" } },
+          { messageId: "missingHeading", data: { heading: "# folders" } },
+          {
+            messageId: "wrongGroup",
+            data: { pattern: "bar/", group: "folders" },
+          },
+        ],
+        output: "# files\nfoo\n\n# folders\nbar/",
       },
       {
         // An anchor-less negation sitting in the wrong section is
         // reported but has no fix at all, so the file is left unchanged
         // even though the rule reports it.
         code: "# folders\nbaz/\n!zzz\n# files\nfoo\n",
-        errors: [{ messageId: "wrongGroup", data: { pattern: "zzz", group: "files" } }],
+        errors: [
+          { messageId: "wrongGroup", data: { pattern: "zzz", group: "files" } },
+        ],
       },
     ],
   });

@@ -22,27 +22,44 @@ describe("buildConfigs", () => {
     expect(all.plugins?.dotignore).toBe(fakePlugin);
   });
 
-  it("recommended contains exactly the Phase-4 rules present in the registry so far, dotignore/-prefixed", () => {
-    // All 10 rules landed in Phase 4 happen to be in recommendedSeverities,
-    // so every currently-registered rule name should show up here.
-    const expectedKeys = Object.keys(rules)
+  it("recommended contains exactly all 12 recommendedSeverities entries now that every one of them is registered", () => {
+    const expectedKeys = [
+      "no-invalid-syntax",
+      "no-duplicate-pattern",
+      "no-redundant-pattern",
+      "no-unreachable-negation",
+      "no-backslash-path",
+      "no-empty-path-segment",
+      "no-misplaced-globstar",
+      "no-trailing-whitespace",
+      "comment-spacing",
+      "max-consecutive-blank-lines",
+      "no-empty-group",
+      "leading-slash-style",
+    ]
       .map((name) => `dotignore/${name}`)
       .sort();
     expect(Object.keys(recommended.rules ?? {}).sort()).toEqual(expectedKeys);
   });
 
-  it("filters out recommendedSeverities entries not yet in the registry (Phase 5)", () => {
-    // These two are named in recommendedSeverities but their rule modules
-    // don't exist until Phase 5 -- this locks in the "configs stay
-    // automatically correct as rules land phase by phase" contract.
-    expect(rules).not.toHaveProperty("no-redundant-pattern");
-    expect(rules).not.toHaveProperty("no-unreachable-negation");
-    expect(recommended.rules).not.toHaveProperty(
-      "dotignore/no-redundant-pattern",
-    );
-    expect(recommended.rules).not.toHaveProperty(
-      "dotignore/no-unreachable-negation",
-    );
+  it("excludes the opinionated formatting rules from recommended, but includes them in all", () => {
+    // sort-patterns, group-patterns, and require-dir-slash are
+    // deliberately absent from recommendedSeverities (they're formatting
+    // preferences, not correctness/consistency rules) even though all
+    // three are registered.
+    for (const name of [
+      "sort-patterns",
+      "group-patterns",
+      "require-dir-slash",
+    ]) {
+      expect(rules).toHaveProperty(name);
+      expect(recommended.rules).not.toHaveProperty(`dotignore/${name}`);
+      expect(all.rules).toHaveProperty(`dotignore/${name}`, "error");
+    }
+  });
+
+  it("registers exactly 15 rules in total", () => {
+    expect(Object.keys(rules)).toHaveLength(15);
   });
 
   it("all contains every registered rule, each set to error", () => {
