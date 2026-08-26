@@ -174,3 +174,74 @@ describe("e2e: configs.recommended against inline fixtures", () => {
     }).not.toThrow();
   });
 });
+
+/**
+ * Regression coverage for two fix-quality bugs found in a full-tarball
+ * consumer check under `configs.all`. Scoped to the specific rules
+ * involved (rather than `all` itself) so these stay filesystem-free:
+ * `all` also enables the fs-aware `require-dir-slash`, whose findings
+ * depend on the real directory tree next to wherever a test runs.
+ */
+describe("e2e: group-patterns cross-rule fix-quality regressions", () => {
+  it("fully alphabetizes a moved-into group instead of leaving a stray interior blank line between its patterns", () => {
+    // Bug: group-patterns' move fixer used to insert a relocated pattern
+    // right before the NEXT section's heading, landing it after that
+    // heading's own leading separator blank instead of right after the
+    // destination section's last existing pattern. That stray interior
+    // blank made sort-patterns treat the two folders-group patterns as
+    // separate blocks (correct behavior for a real blank), leaving the
+    // group unalphabetized yet lint-clean.
+    const linter = new Linter({ configType: "flat" });
+    const config: ConfigObject = {
+      files: ["**/.gitignore"],
+      plugins: { dotignore: plugin },
+      language: "dotignore/gitignore",
+      rules: {
+        "dotignore/group-patterns": "error",
+        "dotignore/sort-patterns": "error",
+      },
+    };
+
+    const result = linter.verifyAndFix("zebra/\napple\nbanana/\nyak", config, {
+      filename: ".gitignore",
+    });
+
+    expect(result.output).toBe(
+      "# folders\nbanana/\nzebra/\n\n# files\napple\nyak\n",
+    );
+    expect(result.messages).toEqual([]);
+  });
+
+  it("does not leave a stray trailing blank line when a now-empty group heading is removed", () => {
+    // Bug: no-empty-group's removal fixer consumed blank lines FOLLOWING
+    // an empty heading block, but never one immediately PRECEDING it. When
+    // group-patterns had earlier inserted that preceding blank as a
+    // section separator, and the section's only pattern was later removed
+    // as redundant/duplicate (emptying the heading, which then also gets
+    // removed since it reaches EOF), the separator blank was left dangling
+    // at EOF with nothing left to separate.
+    const linter = new Linter({ configType: "flat" });
+    const config: ConfigObject = {
+      files: ["**/.gitignore"],
+      plugins: { dotignore: plugin },
+      language: "dotignore/gitignore",
+      rules: {
+        "dotignore/group-patterns": "error",
+        "dotignore/no-redundant-pattern": "error",
+        "dotignore/no-duplicate-pattern": "error",
+        "dotignore/no-empty-group": "error",
+      },
+    };
+
+    for (const input of [
+      "dist/\ndist/bundle.js",
+      "dist/\ndist/\ndist/bundle.js",
+    ]) {
+      const result = linter.verifyAndFix(input, config, {
+        filename: ".gitignore",
+      });
+      expect(result.output).toBe("# folders\ndist/\n");
+      expect(result.messages).toEqual([]);
+    }
+  });
+});
