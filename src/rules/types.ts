@@ -1,5 +1,5 @@
 import type { RuleDefinition, RuleVisitor } from "@eslint/core";
-import type { GitignoreLanguageOptions } from "../language/language.js";
+import type { GitignoreLanguageOptions } from "../language-options.js";
 import type {
   GitignoreNode,
   GitignoreSourceCode,

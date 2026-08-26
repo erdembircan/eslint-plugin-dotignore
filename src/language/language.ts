@@ -6,16 +6,15 @@ import type {
 } from "@eslint/core";
 import { parse as parseGitignore } from "../parser/index.js";
 import type { GitignoreFile } from "../parser/index.js";
+import type { GitignoreLanguageOptions } from "../language-options.js";
 import { GitignoreSourceCode } from "./source-code.js";
 import type { GitignoreNode } from "./source-code.js";
 
-/**
- * This language currently defines no options of its own, but the type stays
- * a plain object (rather than e.g. `Record<string, never>`) because, per the
- * Language API contract, unrecognized keys must be accepted and ignored, not
- * rejected.
- */
-export type GitignoreLanguageOptions = Record<string, unknown>;
+// Re-exported for compatibility: `GitignoreLanguageOptions` is defined at
+// the src root (see language-options.ts) since both this module and the
+// rules layer need it, but this module has historically been where
+// consumers import it from.
+export type { GitignoreLanguageOptions };
 
 function decodeBody(body: string | Uint8Array): string {
   if (typeof body === "string") {
