@@ -183,6 +183,55 @@ describe("group-patterns", () => {
         errors: [{ messageId: "missingHeading", data: { heading: "# files" } }],
         output: "# folders\nbar/\n\n# files\nfoo\n",
       },
+      {
+        // Edge case: "bar/" (folders) is misplaced inside the files
+        // section, and the folders section it belongs in is both already
+        // fully correct AND the last thing in the file -- moving "bar/"
+        // there lands the fix's insertion point at true EOF (there's
+        // nothing left after "baz/" for it to land "before"), not merely
+        // before some later node. The move must still land right after
+        // "baz/", appending its own trailing newline.
+        code: "# files\nfoo\nbar/\n# folders\nbaz/\n",
+        errors: [
+          {
+            messageId: "wrongGroup",
+            data: { pattern: "bar/", group: "folders" },
+          },
+        ],
+        output: "# files\nfoo\n# folders\nbaz/\nbar/\n",
+      },
+      {
+        // Edge case, no trailing newline: the destination section is the
+        // last thing in the file and the file itself doesn't end in a
+        // newline, so the move's EOF-fallback insertion point sits right
+        // after a non-newline character. The fix must prepend its own
+        // newline rather than gluing "bar/" onto the end of "baz/"'s line,
+        // and (as with every EOF append in this rule) still terminates its
+        // own appended line even though none existed before.
+        code: "# files\nfoo\nbar/\n# folders\nbaz/",
+        errors: [
+          {
+            messageId: "wrongGroup",
+            data: { pattern: "bar/", group: "folders" },
+          },
+        ],
+        output: "# files\nfoo\n# folders\nbaz/\nbar/\n",
+      },
+      {
+        // Edge case: neither heading exists, but "bar/" (folders) already
+        // sits ahead of "foo" (files, correctly the only thing needed once
+        // organized) in body order. Once the folders section is built
+        // in a later pass and "bar/" pulled into it, the files section
+        // ends up as the only thing left -- and when *this* pass instead
+        // builds the missing folders section around a *files* pattern
+        // that is otherwise last in the file, the new section's insertion
+        // point lands at true EOF instead of before some existing node.
+        code: "# files\nbar/\nfoo\n",
+        errors: [
+          { messageId: "missingHeading", data: { heading: "# folders" } },
+        ],
+        output: "# files\nfoo\n\n# folders\nbar/\n",
+      },
     ],
   });
 });
