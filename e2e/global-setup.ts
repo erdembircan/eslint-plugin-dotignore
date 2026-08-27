@@ -41,15 +41,26 @@ export default [dotignore.configs.strict];
  * command as a single already-quoted string ourselves and hand that whole
  * string to `execFile` with no args array at all (the same shape as
  * `child_process.exec`), so there's nothing left for Node to concatenate.
- * Quoting every argument in double quotes (escaping embedded `"`) is
+ * Quoting every ARGUMENT in double quotes (escaping embedded `"`) is
  * sufficient here specifically because every argument is a fixed literal
  * this file wrote itself (a package name, a flag, a path this same
  * process just created via `mkdtemp`/`pnpm pack`) -- never user input or
  * anything from an untrusted source, so the only real-world case this
  * needs to survive is a space in an `os.tmpdir()` path, not arbitrary
- * shell metacharacters. Real ESLint invocations (the actual subject under
- * test) go through a different helper entirely -- `node <eslint.js>`, no
- * shell involved at all (e2e/helpers.ts).
+ * shell metacharacters.
+ *
+ * The bare COMMAND name (`pnpm`/`npm`) is deliberately left unquoted,
+ * confirmed empirically in Windows CI: quoting it (`"pnpm" "build"`)
+ * broke pnpm's own version-management shim there -- it resolved into a
+ * stale/incomplete versioned install directory and failed with
+ * `MODULE_NOT_FOUND`, apparently because Windows/cmd.exe's own file
+ * lookup for a quoted, extension-less, PATH-relative command name
+ * doesn't behave the same as for a bare one. It has no spaces or special
+ * characters to protect regardless, so leaving it unquoted is safe here
+ * and neither shape reintroduces DEP0190, since there's still no args
+ * array. Real ESLint invocations (the actual subject under test) go
+ * through a different helper entirely -- `node <eslint.js>`, no shell
+ * involved at all (e2e/helpers.ts).
  */
 function quoteShellArg(arg: string): string {
   return `"${arg.replace(/"/g, '\\"')}"`;
@@ -60,7 +71,7 @@ function runPackageManager(
   args: string[],
   cwd: string,
 ): Promise<{ stdout: string; stderr: string }> {
-  const commandLine = [command, ...args].map(quoteShellArg).join(" ");
+  const commandLine = [command, ...args.map(quoteShellArg)].join(" ");
   return execFileAsync(commandLine, { cwd, shell: true });
 }
 
