@@ -33,22 +33,35 @@ export default [dotignore.configs.strict];
  * `.cmd` file isn't a native executable and needs `cmd.exe` to interpret
  * it. `shell: true` is Node's own documented fix for exactly this case.
  *
- * Node flags `shell: true` combined with an args array as risky (DEP0190)
- * because the shell can reinterpret metacharacters in those arguments --
- * a real concern when any argument comes from outside the program. None
- * do here: every argument passed through this helper is a fixed literal
+ * Node flags `shell: true` combined with an args ARRAY (DEP0190)
+ * specifically because in that shape Node concatenates the array into a
+ * shell command line itself, without escaping -- unsafe in general when
+ * any element could come from outside the program. We sidestep the
+ * warning at the root rather than just tolerating it: build the *entire*
+ * command as a single already-quoted string ourselves and hand that whole
+ * string to `execFile` with no args array at all (the same shape as
+ * `child_process.exec`), so there's nothing left for Node to concatenate.
+ * Quoting every argument in double quotes (escaping embedded `"`) is
+ * sufficient here specifically because every argument is a fixed literal
  * this file wrote itself (a package name, a flag, a path this same
- * process just created via `mkdtemp`/`pnpm pack`), never user input or
- * anything derived from an untrusted source. Real ESLint invocations (the
- * actual subject under test) go through a different helper entirely --
- * `node <eslint.js>`, no shell involved at all (e2e/helpers.ts).
+ * process just created via `mkdtemp`/`pnpm pack`) -- never user input or
+ * anything from an untrusted source, so the only real-world case this
+ * needs to survive is a space in an `os.tmpdir()` path, not arbitrary
+ * shell metacharacters. Real ESLint invocations (the actual subject under
+ * test) go through a different helper entirely -- `node <eslint.js>`, no
+ * shell involved at all (e2e/helpers.ts).
  */
+function quoteShellArg(arg: string): string {
+  return `"${arg.replace(/"/g, '\\"')}"`;
+}
+
 function runPackageManager(
   command: "pnpm" | "npm",
   args: string[],
   cwd: string,
 ): Promise<{ stdout: string; stderr: string }> {
-  return execFileAsync(command, args, { cwd, shell: true });
+  const commandLine = [command, ...args].map(quoteShellArg).join(" ");
+  return execFileAsync(commandLine, { cwd, shell: true });
 }
 
 export default async function setup() {
