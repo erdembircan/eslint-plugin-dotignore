@@ -1,11 +1,7 @@
-import { analyze } from "../algebra/index.js";
-import {
-  compareEffectiveText,
-  sortRun,
-  splitIntoRuns,
-} from "../engines/sort.js";
-import type { SortOptions } from "../engines/sort.js";
-import type { GitignoreFile, Pattern } from "../parser/index.js";
+import { analyze } from "#algebra/index.js";
+import { compareEffectiveText, sortRun, splitIntoRuns } from "#engines/sort.js";
+import type { SortOptions } from "#engines/sort.js";
+import type { GitignoreFile, Pattern } from "#parser/index.js";
 import type { GitignoreRuleDefinition } from "./types.js";
 import { detectLineTerminator } from "./utils.js";
 

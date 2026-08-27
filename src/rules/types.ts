@@ -3,7 +3,7 @@ import type { GitignoreLanguageOptions } from "../language-options.js";
 import type {
   GitignoreNode,
   GitignoreSourceCode,
-} from "../language/source-code.js";
+} from "#language/source-code.js";
 
 /**
  * Shorthand for defining an eslint-plugin-dotignore rule: fixes `LangOptions`,

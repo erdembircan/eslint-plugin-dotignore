@@ -1,4 +1,4 @@
-import type { GitignoreFile } from "../parser/index.js";
+import type { GitignoreFile } from "#parser/index.js";
 import type { GitignoreRuleDefinition } from "./types.js";
 import { endOfLineIncludingTerminator, locFromRange } from "./utils.js";
 

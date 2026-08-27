@@ -28,6 +28,12 @@
   "files": [
     "dist"
   ],
+  "imports": {
+    "#parser/*": "./src/parser/*",
+    "#algebra/*": "./src/algebra/*",
+    "#engines/*": "./src/engines/*",
+    "#language/*": "./src/language/*"
+  },
   "main": "./dist/index.js",
   "exports": {
     ".": {

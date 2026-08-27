@@ -1,5 +1,5 @@
-import { analyze } from "../algebra/index.js";
-import type { Pattern } from "../parser/index.js";
+import { analyze } from "#algebra/index.js";
+import type { Pattern } from "#parser/index.js";
 
 export interface SortOptions {
   direction: "asc" | "desc";

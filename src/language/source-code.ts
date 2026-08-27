@@ -1,6 +1,6 @@
 import { TextSourceCodeBase, VisitNodeStep } from "@eslint/plugin-kit";
 import type { TraversalStep } from "@eslint/plugin-kit";
-import type { GitignoreFile, GitignoreNode } from "../parser/index.js";
+import type { GitignoreFile, GitignoreNode } from "#parser/index.js";
 
 // Re-exported for compatibility: `GitignoreNode` is defined in the parser
 // domain (it's just the union of the parser's own node types), but this
