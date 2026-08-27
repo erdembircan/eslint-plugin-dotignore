@@ -26,6 +26,7 @@ export default tseslint.config(
     files: [
       "src/**/*.ts",
       "test/**/*.ts",
+      "e2e/**/*.ts",
       "*.config.ts",
       ".eslint-doc-generatorrc.ts",
     ],
@@ -82,6 +83,7 @@ export default tseslint.config(
     files: [
       "src/**/*.ts",
       "test/**/*.ts",
+      "e2e/**/*.ts",
       "*.config.ts",
       ".eslint-doc-generatorrc.ts",
     ],
