@@ -19,6 +19,15 @@ describe("no-redundant-pattern", () => {
       // Comments and blank lines are non-Pattern body nodes and must be
       // skipped when collecting patterns to compare.
       "# comment\nfoo\n\nbar\n",
+      // Pathological class expansion, reverse direction: neither pattern
+      // actually covers the other (their character ranges only touch at
+      // one boundary code point, each extending past the other's max), but
+      // checking that requires subsumes(later, earlier) to expand the
+      // EARLIER pattern's huge class as the covered side, which throws
+      // internally and must be swallowed rather than crashing the lint
+      // run -- exactly the reverse-direction counterpart of the forward
+      // subsumes-throw guard exercised above.
+      "[Ѐ-ࠀ]\n[ -Ѐ]\n",
     ],
     invalid: [
       {
