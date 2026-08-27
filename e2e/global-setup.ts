@@ -25,28 +25,30 @@ export default [dotignore.configs.strict];
 `;
 
 /**
- * `pnpm` and `npm` are `.cmd` shims on Windows; `execFile` can launch a
- * `.cmd` file directly (Windows' CreateProcess resolves it fine given the
- * explicit extension), but can't resolve the *bare*, extension-less name
- * the way a shell's PATH lookup would. Appending `.cmd` on win32 is the
- * standard, documented fix (the same one `cross-spawn` and similar
- * libraries use) -- no `shell: true` needed, which also means no shell
- * quoting/escaping concerns at all, unlike the (rejected) alternative of
- * shelling out with `shell: true` and an args array (Node itself flags
- * that combination as unsafe as of DEP0190). Real ESLint invocations (the
+ * `pnpm` and `npm` are `.cmd` shims on Windows. Naively appending `.cmd`
+ * and calling `execFile` WITHOUT a shell was tried first and confirmed
+ * wrong empirically, in real Windows CI: Node's `child_process` cannot
+ * spawn a `.cmd`/`.bat` file directly once arguments are involved -- it
+ * fails with `EINVAL` regardless of the explicit extension, because a
+ * `.cmd` file isn't a native executable and needs `cmd.exe` to interpret
+ * it. `shell: true` is Node's own documented fix for exactly this case.
+ *
+ * Node flags `shell: true` combined with an args array as risky (DEP0190)
+ * because the shell can reinterpret metacharacters in those arguments --
+ * a real concern when any argument comes from outside the program. None
+ * do here: every argument passed through this helper is a fixed literal
+ * this file wrote itself (a package name, a flag, a path this same
+ * process just created via `mkdtemp`/`pnpm pack`), never user input or
+ * anything derived from an untrusted source. Real ESLint invocations (the
  * actual subject under test) go through a different helper entirely --
- * `node <eslint.js>`, no shell or shim resolution involved (e2e/helpers.ts).
+ * `node <eslint.js>`, no shell involved at all (e2e/helpers.ts).
  */
-function packageManagerCommand(name: "pnpm" | "npm"): string {
-  return process.platform === "win32" ? `${name}.cmd` : name;
-}
-
 function runPackageManager(
   command: "pnpm" | "npm",
   args: string[],
   cwd: string,
 ): Promise<{ stdout: string; stderr: string }> {
-  return execFileAsync(packageManagerCommand(command), args, { cwd });
+  return execFileAsync(command, args, { cwd, shell: true });
 }
 
 export default async function setup() {
