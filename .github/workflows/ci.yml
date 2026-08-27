@@ -29,6 +29,31 @@ jobs:
       - run: pnpm build
       - run: pnpm test:coverage
 
+  e2e:
+    # Consumer-fidelity suite: packs the tarball, installs it into a
+    # throwaway project, and drives the real ESLint CLI as a subprocess --
+    # exercises actual OS process/file/git behavior, so it runs on both
+    # platforms real consumers use rather than just Linux like the rest of
+    # this workflow.
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.16.1
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:e2e
+
   license:
     runs-on: ubuntu-latest
     steps:
