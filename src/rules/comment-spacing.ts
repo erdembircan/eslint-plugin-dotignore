@@ -1,4 +1,4 @@
-import type { Comment } from "../parser/index.js";
+import type { Comment } from "#parser/index.js";
 import type { GitignoreRuleDefinition } from "./types.js";
 import { locFromRange } from "./utils.js";
 

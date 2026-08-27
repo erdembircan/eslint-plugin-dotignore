@@ -4,8 +4,8 @@ import type {
   LanguageContext,
   OkParseResult,
 } from "@eslint/core";
-import { parse as parseGitignore } from "../parser/index.js";
-import type { GitignoreFile } from "../parser/index.js";
+import { parse as parseGitignore } from "#parser/index.js";
+import type { GitignoreFile } from "#parser/index.js";
 import type { GitignoreLanguageOptions } from "../language-options.js";
 import { GitignoreSourceCode } from "./source-code.js";
 import type { GitignoreNode } from "./source-code.js";

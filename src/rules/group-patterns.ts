@@ -1,6 +1,6 @@
-import { computeGroupViolations } from "../engines/group.js";
-import type { ArrangeEdit, GroupOptions, MoveEdit } from "../engines/group.js";
-import type { GitignoreFile, GitignoreNode } from "../parser/index.js";
+import { computeGroupViolations } from "#engines/group.js";
+import type { ArrangeEdit, GroupOptions, MoveEdit } from "#engines/group.js";
+import type { GitignoreFile, GitignoreNode } from "#parser/index.js";
 import type { GitignoreRuleDefinition } from "./types.js";
 import { detectLineTerminator, endOfLineIncludingTerminator } from "./utils.js";
 

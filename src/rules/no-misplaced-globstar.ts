@@ -1,5 +1,5 @@
-import { analyze } from "../algebra/index.js";
-import type { Pattern } from "../parser/index.js";
+import { analyze } from "#algebra/index.js";
+import type { Pattern } from "#parser/index.js";
 import type { GitignoreRuleDefinition } from "./types.js";
 import { locFromRange, patternIssueRange } from "./utils.js";
 

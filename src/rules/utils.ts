@@ -1,9 +1,9 @@
-import type { Issue } from "../algebra/index.js";
+import type { Issue } from "#algebra/index.js";
 import type {
   GitignoreNode,
   GitignoreSourceCode,
-} from "../language/source-code.js";
-import type { Pattern, SourceLocation } from "../parser/index.js";
+} from "#language/source-code.js";
+import type { Pattern, SourceLocation } from "#parser/index.js";
 
 /**
  * Converts an `analyze()` issue's `index`/`length` (relative to `Pattern.pattern`,

@@ -1,13 +1,13 @@
 import { dirname, join } from "node:path";
-import { analyze, subsumes } from "../algebra/index.js";
+import { analyze, subsumes } from "#algebra/index.js";
 import type {
   Analysis,
   Segment,
   SegmentTokens,
   Token,
   TokenLit,
-} from "../algebra/index.js";
-import type { Pattern } from "../parser/index.js";
+} from "#algebra/index.js";
+import type { Pattern } from "#parser/index.js";
 import type { FsHost } from "./fs-host.js";
 import type { GitignoreRuleDefinition } from "./types.js";
 

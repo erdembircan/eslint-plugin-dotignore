@@ -1,5 +1,5 @@
-import { analyze } from "../algebra/index.js";
-import type { BlankLine, Comment, Pattern } from "../parser/index.js";
+import { analyze } from "#algebra/index.js";
+import type { BlankLine, Comment, Pattern } from "#parser/index.js";
 import type { GitignoreRuleDefinition } from "./types.js";
 import { locFromRange } from "./utils.js";
 

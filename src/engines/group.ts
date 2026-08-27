@@ -1,4 +1,4 @@
-import type { BlankLine, GitignoreNode, Pattern } from "../parser/index.js";
+import type { BlankLine, GitignoreNode, Pattern } from "#parser/index.js";
 
 export type GroupName = "folders" | "files";
 

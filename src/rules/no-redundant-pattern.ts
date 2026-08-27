@@ -1,6 +1,6 @@
-import { analyze, subsumes } from "../algebra/index.js";
-import type { Analysis } from "../algebra/index.js";
-import type { GitignoreFile, Pattern } from "../parser/index.js";
+import { analyze, subsumes } from "#algebra/index.js";
+import type { Analysis } from "#algebra/index.js";
+import type { GitignoreFile, Pattern } from "#parser/index.js";
 import type { GitignoreRuleDefinition } from "./types.js";
 import { endOfLineIncludingTerminator } from "./utils.js";
 
